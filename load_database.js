@@ -20,7 +20,7 @@ exports.load_database = function (req, res) {
             let courses = parse_list_of_courses(data);
             load_courses_to_db(courses);
             get_enrolled_students(courses);
-            //TODO: Continue
+            get_grades(courses);
         });
     res.redirect('/');
 }
@@ -41,7 +41,6 @@ function delete_all_records_from_db() {
         );
     });
 }
-
 function parse_list_of_courses(data) {
     let courses = [];
     data.forEach(element => {
@@ -59,6 +58,21 @@ function parse_list_of_students(data) {
         }
     });
     return students;
+}
+function parse_evaluation_and_grades(data) {
+    let evaluation = [];
+    let grades = [];
+    console.log(data['usergrades']);
+    data['usergrades'].forEach(element => {
+        let student = element.userid;
+        element['gradeitems'].forEach(item => {
+            let assessment = { 'id':item.id,'name':item.itemname,'min':item.grademin,'max':item.grademax};
+            let grade = {'student': student, 'value':item.graderaw, 'evaluation':item.id};
+            evaluation.push(assessment);
+            grades.push(grade);
+        });
+    });
+    return { 'g':grades, 'e':evaluation};
 }
 function get_enrolled_students(courses) {
     let url = new URL('http://localhost/webservice/rest/server.php');
@@ -78,6 +92,24 @@ function get_enrolled_students(courses) {
             });
     });
 }
+function get_grades(courses) {
+    let url = new URL('http://localhost/webservice/rest/server.php');
+    let params = new URLSearchParams([
+        ['wstoken', '2a31fe7fde8a21ce21761b57c4716df0'], //TODO: possibel to get ?
+        ['moodlewsrestformat', 'json'],
+        ['wsfunction', 'gradereport_user_get_grade_items'],
+    ]);
+    courses.forEach(element => {
+        params.set('courseid', element['id']);
+        url.search = params;
+        fetch(url)
+            .then(response => response.json())
+            .then(data => {
+                let grades = parse_evaluation_and_grades(data);
+                load_grades_to_db(grades.g,grades.e, element);
+            });
+    });
+}
 function load_courses_to_db(courses) {
     let sql = 'INSERT INTO Course (id, name) VALUES ' + courses.map((x) => '(?,?)').join(',') + ';';
     let params = [].concat.apply([], courses.map((x) => [x['id'], x['name']]));
@@ -90,6 +122,35 @@ function load_courses_to_db(courses) {
             }
         }
     );
+}
+function load_grades_to_db(grades, evaluations, course) {
+    if (evaluations.length > 0) {
+        let sql = 'INSERT OR IGNORE INTO Evaluation (id, name, course, min, max) VALUES ' + evaluations.map((x) => '(?,?,?,?,?)').join(',') + ';';
+        let params = [].concat.apply([], evaluations.map((x) => [x['id'], x['name'],course['id'],x['min'],x['max']]));
+        db.run(sql, params,
+            function (err, result) {
+                if (err) {
+                    console.log(sql);
+                    console.log(err);
+                    console.trace();
+                    return err;
+                }
+            }
+        );
+
+        sql = 'INSERT INTO Grade (value, student, evaluation) VALUES ' + grades.map((x) => '(?,?,?)').join(',') + ';';
+        params = [].concat.apply([], grades.map((x) => [x['value'],x['student'], x['evaluation']]));
+        db.run(sql, params,
+            function (err, result) {
+                if (err) {
+                    console.log(sql);
+                    console.log(err);
+                    console.trace();
+                    return err;
+                }
+            }
+        );
+    }
 }
 function load_students_to_db(students, course) {
     if (students.length > 0) {
