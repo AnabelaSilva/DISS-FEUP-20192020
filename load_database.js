@@ -5,6 +5,7 @@ const url = require('url');
 const db = require("./database.js");
 
 exports.load_database = function (req, res) {
+    delete_all_records_from_db();
     let url = new URL('http://localhost/webservice/rest/server.php');
     let params = new URLSearchParams([
         ['wstoken', '2a31fe7fde8a21ce21761b57c4716df0'], //TODO: possibel to get ?
@@ -24,6 +25,23 @@ exports.load_database = function (req, res) {
     res.redirect('/');
 }
 
+function delete_all_records_from_db(){
+    let tables = ['Student_in_Course','Student','Course'];
+    let sql = 'DELETE FROM ';
+    tables.forEach(element => {
+      let sql_cmd = sql + element + ';';
+      db.run(sql_cmd, [],
+        function (err, result) {
+            if (err) {
+                console.log(err);
+                console.trace();
+                return err;
+            }
+        }
+    );
+    });
+}
+
 function parse_list_of_courses(data) {
     let courses = [];
     data.forEach(element => {
@@ -36,7 +54,9 @@ function parse_list_of_students(data) {
     let students = [];
     data.forEach(element => {
         let student = { 'id': element.id, 'name': element.fullname };
-        students.push(student);
+        if(undefined != element['roles'].find(el => el['roleid'] == 5)){ //TODO: change 5 to roleid of students
+            students.push(student);
+        }
     });
     return students;
 }
@@ -61,23 +81,26 @@ function get_enrolled_students(courses) {
 function load_courses_to_db(courses) {
     let sql = 'INSERT INTO Course (id, name) VALUES ' + courses.map((x) => '(?,?)').join(',') + ';';
     let params = [].concat.apply([], courses.map((x) => [x['id'],x['name']]));
-    console.log(params);
     db.run(sql, params,
         function (err, result) {
             if (err) {
-                console.log(err)
+                console.log(err);
+                console.trace();
                 return err;
             }
         }
     );
 }
 function load_students_to_db(students, course) {
+    if(students.length > 0){
     let sql = 'INSERT OR IGNORE INTO Student (id, name) VALUES ' + students.map((x) => '(?,?)').join(',') + ';';
     let params = [].concat.apply([], students.map((x) => [x['id'],x['name']]));
     db.run(sql, params,
         function (err, result) {
             if (err) {
-                console.log(err)
+                console.log(sql);
+                console.log(err);
+                console.trace();
                 return err;
             }
         }
@@ -88,10 +111,12 @@ function load_students_to_db(students, course) {
     db.run(sql, params,
         function (err, result) {
             if (err) {
-                console.log(err)
+                console.log(sql);
+                console.log(err);
+                console.trace();
                 return err;
             }
         }
     );
-
+    }
 }
