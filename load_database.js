@@ -25,20 +25,20 @@ exports.load_database = function (req, res) {
     res.redirect('/');
 }
 
-function delete_all_records_from_db(){
-    let tables = ['Student_in_Course','Student','Course'];
+function delete_all_records_from_db() {
+    let tables = ['Student_in_Course', 'Student', 'Course'];
     let sql = 'DELETE FROM ';
     tables.forEach(element => {
-      let sql_cmd = sql + element + ';';
-      db.run(sql_cmd, [],
-        function (err, result) {
-            if (err) {
-                console.log(err);
-                console.trace();
-                return err;
+        let sql_cmd = sql + element + ';';
+        db.run(sql_cmd, [],
+            function (err, result) {
+                if (err) {
+                    console.log(err);
+                    console.trace();
+                    return err;
+                }
             }
-        }
-    );
+        );
     });
 }
 
@@ -54,7 +54,7 @@ function parse_list_of_students(data) {
     let students = [];
     data.forEach(element => {
         let student = { 'id': element.id, 'name': element.fullname };
-        if(undefined != element['roles'].find(el => el['roleid'] == 5)){ //TODO: change 5 to roleid of students
+        if (undefined != element['roles'].find(el => el['roleid'] == 5)) { //TODO: change 5 to roleid of students
             students.push(student);
         }
     });
@@ -68,19 +68,19 @@ function get_enrolled_students(courses) {
         ['wsfunction', 'core_enrol_get_enrolled_users'],
     ]);
     courses.forEach(element => {
-        params.set('courseid',element['id']);
-        url.search = params; 
+        params.set('courseid', element['id']);
+        url.search = params;
         fetch(url)
-        .then(response => response.json())
-        .then(data => {
-            let students = parse_list_of_students(data);
-            load_students_to_db(students, element);
-        });
+            .then(response => response.json())
+            .then(data => {
+                let students = parse_list_of_students(data);
+                load_students_to_db(students, element);
+            });
     });
 }
 function load_courses_to_db(courses) {
     let sql = 'INSERT INTO Course (id, name) VALUES ' + courses.map((x) => '(?,?)').join(',') + ';';
-    let params = [].concat.apply([], courses.map((x) => [x['id'],x['name']]));
+    let params = [].concat.apply([], courses.map((x) => [x['id'], x['name']]));
     db.run(sql, params,
         function (err, result) {
             if (err) {
@@ -92,31 +92,31 @@ function load_courses_to_db(courses) {
     );
 }
 function load_students_to_db(students, course) {
-    if(students.length > 0){
-    let sql = 'INSERT OR IGNORE INTO Student (id, name) VALUES ' + students.map((x) => '(?,?)').join(',') + ';';
-    let params = [].concat.apply([], students.map((x) => [x['id'],x['name']]));
-    db.run(sql, params,
-        function (err, result) {
-            if (err) {
-                console.log(sql);
-                console.log(err);
-                console.trace();
-                return err;
+    if (students.length > 0) {
+        let sql = 'INSERT OR IGNORE INTO Student (id, name) VALUES ' + students.map((x) => '(?,?)').join(',') + ';';
+        let params = [].concat.apply([], students.map((x) => [x['id'], x['name']]));
+        db.run(sql, params,
+            function (err, result) {
+                if (err) {
+                    console.log(sql);
+                    console.log(err);
+                    console.trace();
+                    return err;
+                }
             }
-        }
-    );
+        );
 
-    sql = 'INSERT INTO Student_in_Course (student, course) VALUES ' + students.map((x) => '(?,?)').join(',') + ';';
-    params = [].concat.apply([], students.map((x) => [x['id'],course['id']]));
-    db.run(sql, params,
-        function (err, result) {
-            if (err) {
-                console.log(sql);
-                console.log(err);
-                console.trace();
-                return err;
+        sql = 'INSERT INTO Student_in_Course (student, course) VALUES ' + students.map((x) => '(?,?)').join(',') + ';';
+        params = [].concat.apply([], students.map((x) => [x['id'], course['id']]));
+        db.run(sql, params,
+            function (err, result) {
+                if (err) {
+                    console.log(sql);
+                    console.log(err);
+                    console.trace();
+                    return err;
+                }
             }
-        }
-    );
+        );
     }
 }
