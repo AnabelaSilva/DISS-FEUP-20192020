@@ -1,17 +1,22 @@
 const fetch = require('node-fetch');
 const http = require("http");
 const fs = require('fs');
-const url = require('url');
+//const url = require('url');
 const db = require("./database.js");
 
+const url = new URL('http://localhost/webservice/rest/server.php');
+const wstoken = 'a369f680e3cb5fab20997372ed53d1e1';//TODO: possibel to get ?
+const moodlewsrestformat = 'json';
+const SQLITE_LIMIT_VARIABLE_NUMBER = 999;
+const coordinator_id_in_moodle = 103; //TODO: ID of the progam marter coordinator
+    
 exports.load_database = function (req, res) {
     delete_all_records_from_db();
-    let url = new URL('http://localhost/webservice/rest/server.php');
     let params = new URLSearchParams([
-        ['wstoken', '2a31fe7fde8a21ce21761b57c4716df0'], //TODO: possibel to get ?
-        ['moodlewsrestformat', 'json'],
+        ['wstoken', wstoken],
+        ['moodlewsrestformat', moodlewsrestformat],
         ['wsfunction', 'core_enrol_get_users_courses'],
-        ['userid', 6] //TODO: ID of the progam marter coordinator
+        ['userid', coordinator_id_in_moodle]
     ]);
     url.search = params;
     fetch(url)
@@ -21,19 +26,21 @@ exports.load_database = function (req, res) {
             load_courses_to_db(courses);
             get_enrolled_students(courses);
             get_grades(courses);
+            //get_assign(); mod_assign_get_submissions
+            //get_quiz(); mod_quiz_get_user_attempts
+            //get_forum();
         });
     res.redirect('/');
 }
-
 function delete_all_records_from_db() {
-    let tables = ['Student_in_Course', 'Student', 'Course'];
+    let tables = ['Grade', 'Evaluation','Student_in_Course', 'Student', 'Course'];
     let sql = 'DELETE FROM ';
     tables.forEach(element => {
         let sql_cmd = sql + element + ';';
         db.run(sql_cmd, [],
             function (err, result) {
                 if (err) {
-                    console.log(err);
+                    console.error(err);
                     console.trace();
                     return err;
                 }
@@ -62,23 +69,21 @@ function parse_list_of_students(data) {
 function parse_evaluation_and_grades(data) {
     let evaluation = [];
     let grades = [];
-    console.log(data['usergrades']);
     data['usergrades'].forEach(element => {
         let student = element.userid;
         element['gradeitems'].forEach(item => {
-            let assessment = { 'id':item.id,'name':item.itemname,'min':item.grademin,'max':item.grademax};
-            let grade = {'student': student, 'value':item.graderaw, 'evaluation':item.id};
+            let assessment = { 'id': item.id, 'name': item.itemname, 'min': item.grademin, 'max': item.grademax, 'type_id': item.iteminstance, 'type': item.itemmodule};
+            let grade = { 'student': student, 'value': item.graderaw, 'evaluation': item.id };
             evaluation.push(assessment);
             grades.push(grade);
         });
     });
-    return { 'g':grades, 'e':evaluation};
+    return { 'g': grades, 'e': evaluation };
 }
 function get_enrolled_students(courses) {
-    let url = new URL('http://localhost/webservice/rest/server.php');
     let params = new URLSearchParams([
-        ['wstoken', '2a31fe7fde8a21ce21761b57c4716df0'], //TODO: possibel to get ?
-        ['moodlewsrestformat', 'json'],
+        ['wstoken', wstoken],
+        ['moodlewsrestformat', moodlewsrestformat],
         ['wsfunction', 'core_enrol_get_enrolled_users'],
     ]);
     courses.forEach(element => {
@@ -93,10 +98,9 @@ function get_enrolled_students(courses) {
     });
 }
 function get_grades(courses) {
-    let url = new URL('http://localhost/webservice/rest/server.php');
     let params = new URLSearchParams([
-        ['wstoken', '2a31fe7fde8a21ce21761b57c4716df0'], //TODO: possibel to get ?
-        ['moodlewsrestformat', 'json'],
+        ['wstoken', wstoken],
+        ['moodlewsrestformat', moodlewsrestformat],
         ['wsfunction', 'gradereport_user_get_grade_items'],
     ]);
     courses.forEach(element => {
@@ -106,7 +110,7 @@ function get_grades(courses) {
             .then(response => response.json())
             .then(data => {
                 let grades = parse_evaluation_and_grades(data);
-                load_grades_to_db(grades.g,grades.e, element);
+                load_grades_to_db(grades.g, grades.e, element);
             });
     });
 }
@@ -116,7 +120,7 @@ function load_courses_to_db(courses) {
     db.run(sql, params,
         function (err, result) {
             if (err) {
-                console.log(err);
+                console.error(err);
                 console.trace();
                 return err;
             }
@@ -125,31 +129,38 @@ function load_courses_to_db(courses) {
 }
 function load_grades_to_db(grades, evaluations, course) {
     if (evaluations.length > 0) {
-        let sql = 'INSERT OR IGNORE INTO Evaluation (id, name, course, min, max) VALUES ' + evaluations.map((x) => '(?,?,?,?,?)').join(',') + ';';
-        let params = [].concat.apply([], evaluations.map((x) => [x['id'], x['name'],course['id'],x['min'],x['max']]));
-        db.run(sql, params,
-            function (err, result) {
-                if (err) {
-                    console.log(sql);
-                    console.log(err);
-                    console.trace();
-                    return err;
+        for (let index = 0; index < evaluations.length; index = index + Math.trunc(SQLITE_LIMIT_VARIABLE_NUMBER / 7)) {
+            let eval_aux = evaluations.slice(index, index + Math.trunc(SQLITE_LIMIT_VARIABLE_NUMBER / 7));
+            console.log(index);
+            let sql = 'INSERT OR IGNORE INTO Evaluation (id, name, course, min, max, type_id, type) VALUES ' + eval_aux.map((x) => '(?,?,?,?,?,?,?)').join(',') + ';';
+            let params = [].concat.apply([], eval_aux.map((x) => [x['id'], x['name'], course['id'], x['min'], x['max'], x['type_id'],x['type']]));
+            db.run(sql, params,
+                function (err, result) {
+                    if (err) {
+                        console.error(sql);
+                        console.error(err);
+                        console.trace();
+                        return err;
+                    }
                 }
-            }
-        );
+            );
 
-        sql = 'INSERT INTO Grade (value, student, evaluation) VALUES ' + grades.map((x) => '(?,?,?)').join(',') + ';';
-        params = [].concat.apply([], grades.map((x) => [x['value'],x['student'], x['evaluation']]));
-        db.run(sql, params,
-            function (err, result) {
-                if (err) {
-                    console.log(sql);
-                    console.log(err);
-                    console.trace();
-                    return err;
+        }
+        for (let index = 0; index < grades.length; index = index + Math.trunc(SQLITE_LIMIT_VARIABLE_NUMBER / 3)) {
+            let grades_aux = grades.slice(index, index + Math.trunc(SQLITE_LIMIT_VARIABLE_NUMBER / 3));
+            sql = 'INSERT INTO Grade (value, student, evaluation) VALUES ' + grades_aux.map((x) => '(?,?,?)').join(',') + ';';
+            params = [].concat.apply([], grades_aux.map((x) => [x['value'], x['student'], x['evaluation']]));
+            db.run(sql, params,
+                function (err, result) {
+                    if (err) {
+                        console.error(sql);
+                        console.error(err);
+                        console.trace();
+                        return err;
+                    }
                 }
-            }
-        );
+            );
+        }
     }
 }
 function load_students_to_db(students, course) {
@@ -159,8 +170,8 @@ function load_students_to_db(students, course) {
         db.run(sql, params,
             function (err, result) {
                 if (err) {
-                    console.log(sql);
-                    console.log(err);
+                    console.error(sql);
+                    console.error(err);
                     console.trace();
                     return err;
                 }
@@ -172,8 +183,8 @@ function load_students_to_db(students, course) {
         db.run(sql, params,
             function (err, result) {
                 if (err) {
-                    console.log(sql);
-                    console.log(err);
+                    console.error(sql);
+                    console.error(err);
                     console.trace();
                     return err;
                 }

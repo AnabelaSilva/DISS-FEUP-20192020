@@ -8,8 +8,12 @@ app.use(express.static(__dirname + '/public'));
 
 app.get('/', (req, res) => {
   res.render('index', {
-    title: 'Homepage',
+    title: 'Homepage'
   });
+});
+
+app.get('/grades', (req, res) => {
+  res.render('show');
 });
 
 app.get('/reload', (req, res) => {
