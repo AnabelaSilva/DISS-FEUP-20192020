@@ -2,6 +2,7 @@ const fetch = require('node-fetch');
 const http = require("http");
 const fs = require('fs');
 //const url = require('url');
+const csv = require('csv-parser');
 const db = require("./database.js");
 
 const url = new URL('http://localhost/webservice/rest/server.php');
@@ -9,7 +10,10 @@ const wstoken = 'a369f680e3cb5fab20997372ed53d1e1';//TODO: possibel to get ?
 const moodlewsrestformat = 'json';
 const SQLITE_LIMIT_VARIABLE_NUMBER = 999;
 const coordinator_id_in_moodle = 103; //TODO: ID of the progam marter coordinator
-    
+
+
+
+
 exports.load_database = function (req, res) {
     delete_all_records_from_db();
     let params = new URLSearchParams([
@@ -26,14 +30,13 @@ exports.load_database = function (req, res) {
             load_courses_to_db(courses);
             get_enrolled_students(courses);
             get_grades(courses);
-            //get_assign(); mod_assign_get_submissions
-            //get_quiz(); mod_quiz_get_user_attempts
-            //get_forum();
+            //get_logs();
+            parse_logs(courses);
         });
     res.redirect('/');
 }
 function delete_all_records_from_db() {
-    let tables = ['Grade', 'Evaluation','Student_in_Course', 'Student', 'Course'];
+    let tables = ['Grade', 'Evaluation', 'Student_in_Course', 'Student', 'Course'];
     let sql = 'DELETE FROM ';
     tables.forEach(element => {
         let sql_cmd = sql + element + ';';
@@ -72,13 +75,62 @@ function parse_evaluation_and_grades(data) {
     data['usergrades'].forEach(element => {
         let student = element.userid;
         element['gradeitems'].forEach(item => {
-            let assessment = { 'id': item.id, 'name': item.itemname, 'min': item.grademin, 'max': item.grademax, 'type_id': item.iteminstance, 'type': item.itemmodule};
+            let assessment = { 'id': item.id, 'name': item.itemname, 'min': item.grademin, 'max': item.grademax, 'type_id': item.iteminstance, 'type': item.itemmodule };
             let grade = { 'student': student, 'value': item.graderaw, 'evaluation': item.id };
             evaluation.push(assessment);
             grades.push(grade);
         });
     });
     return { 'g': grades, 'e': evaluation };
+}
+function parse_logs(courses, students) {
+    let activities = [];
+    courses.forEach(element => {
+        const results = [];
+        fs.createReadStream('files/logs_' + element.id + '.csv')
+            .pipe(csv())
+            .on('data', (data) => results.push(data))
+            .on('end', () => {
+                results.forEach(elem => {
+                    let str = elem.Description;
+                    let activity = {};
+                    switch (true) {
+                        case /The user with id \'(\d)+\' has viewed the submission status page for the assignment with course module id \'(\d)+\'./.test(str):
+                            activity.type = 1;
+                            break;
+                        case /The user with id \'(\d)+\' has submitted the submission with id \'(\d)+\' for the assignment with course module id \'(\d)+\'./.test(str):
+                            activity.type = 2;
+                            break;
+                        case /The user with id \'(\d)+\' has submitted the attempt with id \'(\d)+\' for the quiz with course module id \'(\d)+\'./.test(str):
+                            activity.type = 3;
+                            break;
+                        case /The user with id \'(\d)+\' viewed the 'quiz' activity with course module id \'(\d)+\'/.test(str):
+                            activity.type = 4;
+                            break;
+                        case /The user with id \'(\d)+\' has viewed the discussion with id \'(\d)+\' in the forum with course module id \'(\d)+\'./.test(str):
+                            activity.type = 5;
+                            break;
+                        case /The user with id \'(\d)+\' has created the discussion with id \'(\d)+\' in the forum with course module id \'(\d)+\'/.test(str):
+                            activity.type = 6;
+                            break;
+                        case /The user with id \'(\d)+\' has created the post with id \'(\d)+\' in the discussion with id \'(\d)+\' in the forum with course module id \'(\d)+\'./.test(str):
+                            activity.type = 7;
+                            break;
+                        default:
+                            break;
+                    }
+                    if (activity.type != null) {
+                        activity.student = str.match(/The user with id \'(\d+)\'/)[1];
+                        //TODO: take out teachers activity
+                        //if (students.find(el => el['id'] == activity.student)) {
+                            activity.date = elem.date;
+                            activity.course = element.id;
+                            activities.push(activity);
+                        //}
+                    }
+                });
+            });
+    });
 }
 function get_enrolled_students(courses) {
     let params = new URLSearchParams([
@@ -131,9 +183,8 @@ function load_grades_to_db(grades, evaluations, course) {
     if (evaluations.length > 0) {
         for (let index = 0; index < evaluations.length; index = index + Math.trunc(SQLITE_LIMIT_VARIABLE_NUMBER / 7)) {
             let eval_aux = evaluations.slice(index, index + Math.trunc(SQLITE_LIMIT_VARIABLE_NUMBER / 7));
-            console.log(index);
             let sql = 'INSERT OR IGNORE INTO Evaluation (id, name, course, min, max, type_id, type) VALUES ' + eval_aux.map((x) => '(?,?,?,?,?,?,?)').join(',') + ';';
-            let params = [].concat.apply([], eval_aux.map((x) => [x['id'], x['name'], course['id'], x['min'], x['max'], x['type_id'],x['type']]));
+            let params = [].concat.apply([], eval_aux.map((x) => [x['id'], x['name'], course['id'], x['min'], x['max'], x['type_id'], x['type']]));
             db.run(sql, params,
                 function (err, result) {
                     if (err) {
