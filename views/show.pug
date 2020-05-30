@@ -1,4 +1,10 @@
 extends default
 
 block content
-    .graph
+    script(src="javascript/charts.js")
+    script(src="https://cdn.jsdelivr.net/npm/chart.js@2.8.0")
+    canvas(id="myChart")
+    script.
+        let results = !{JSON.stringify(data)};
+        
+
