@@ -17,7 +17,8 @@ app.get('/grades', (req, res) => {
 });
 
 app.get('/reload', (req, res) => {
-  load_.load_database(req, res);
+  load_.load_database();
+  res.redirect('/');
 });
 
 const server = app.listen(7000, () => {

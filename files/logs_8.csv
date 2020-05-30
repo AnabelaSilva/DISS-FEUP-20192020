@@ -1,4 +1,4 @@
-﻿Time,"User full name","Affected user","Event context",Component,"Event name",Description,Origin,"IP address"
+Time,"User full name","Affected user","Event context",Component,"Event name",Description,Origin,"IP address"
 "29/05/20, 10:43","C Oordinator",-,"Course: Junior Mathematics",Logs,"Log report viewed","The user with id '103' viewed the log report for the course with id '8'.",web,0:0:0:0:0:0:0:1
 "29/05/20, 10:21","Admin User",-,"Course: Junior Mathematics",System,"Course viewed","The user with id '2' viewed the course with id '8'.",web,0:0:0:0:0:0:0:1
 "28/05/20, 17:05","Admin User as Barbara Gardner",-,"Assignment: Tell me what you have learned so far.",Assignment,"The status of the submission has been viewed.","The user with id '118' has viewed the submission status page for the assignment with course module id '106'.",web,0:0:0:0:0:0:0:1

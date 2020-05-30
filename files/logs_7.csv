@@ -1,4 +1,4 @@
-﻿Time,"User full name","Affected user","Event context",Component,"Event name",Description,Origin,"IP address"
+Time,"User full name","Affected user","Event context",Component,"Event name",Description,Origin,"IP address"
 "29/05/20, 10:43","C Oordinator",-,"Course:  Revision: Chemistry",Logs,"Log report viewed","The user with id '103' viewed the log report for the course with id '7'.",web,0:0:0:0:0:0:0:1
 "29/05/20, 10:21","Admin User",-,"Course:  Revision: Chemistry",System,"Course viewed","The user with id '2' viewed the course with id '7'.",web,0:0:0:0:0:0:0:1
 "28/05/20, 16:53","Admin User",-,"Course:  Revision: Chemistry",System,"Course viewed","The user with id '2' viewed the course with id '7'.",web,0:0:0:0:0:0:0:1

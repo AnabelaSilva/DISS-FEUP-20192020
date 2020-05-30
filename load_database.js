@@ -2,7 +2,7 @@ const fetch = require('node-fetch');
 const http = require("http");
 const fs = require('fs');
 //const url = require('url');
-const csv = require('csv-parser');
+const Papa = require('papaparse');
 const db = require("./database.js");
 
 const url = new URL('http://localhost/webservice/rest/server.php');
@@ -11,10 +11,7 @@ const moodlewsrestformat = 'json';
 const SQLITE_LIMIT_VARIABLE_NUMBER = 999;
 const coordinator_id_in_moodle = 103; //TODO: ID of the progam marter coordinator
 
-
-
-
-exports.load_database = function (req, res) {
+exports.load_database = function () {
     delete_all_records_from_db();
     let params = new URLSearchParams([
         ['wstoken', wstoken],
@@ -30,13 +27,13 @@ exports.load_database = function (req, res) {
             load_courses_to_db(courses);
             get_enrolled_students(courses);
             get_grades(courses);
-            //get_logs();
-            parse_logs(courses);
+            //get_logs(); //TODO: get from moodle?
+            let activities = parse_logs(courses);
+            load_activities_to_db(activities);
         });
-    res.redirect('/');
 }
 function delete_all_records_from_db() {
-    let tables = ['Grade', 'Evaluation', 'Student_in_Course', 'Student', 'Course'];
+    let tables = ['Activity','Grade', 'Evaluation', 'Student_in_Course', 'Student', 'Course'];
     let sql = 'DELETE FROM ';
     tables.forEach(element => {
         let sql_cmd = sql + element + ';';
@@ -86,51 +83,49 @@ function parse_evaluation_and_grades(data) {
 function parse_logs(courses, students) {
     let activities = [];
     courses.forEach(element => {
-        const results = [];
-        fs.createReadStream('files/logs_' + element.id + '.csv')
-            .pipe(csv())
-            .on('data', (data) => results.push(data))
-            .on('end', () => {
-                results.forEach(elem => {
-                    let str = elem.Description;
-                    let activity = {};
-                    switch (true) {
-                        case /The user with id \'(\d)+\' has viewed the submission status page for the assignment with course module id \'(\d)+\'./.test(str):
-                            activity.type = 1;
-                            break;
-                        case /The user with id \'(\d)+\' has submitted the submission with id \'(\d)+\' for the assignment with course module id \'(\d)+\'./.test(str):
-                            activity.type = 2;
-                            break;
-                        case /The user with id \'(\d)+\' has submitted the attempt with id \'(\d)+\' for the quiz with course module id \'(\d)+\'./.test(str):
-                            activity.type = 3;
-                            break;
-                        case /The user with id \'(\d)+\' viewed the 'quiz' activity with course module id \'(\d)+\'/.test(str):
-                            activity.type = 4;
-                            break;
-                        case /The user with id \'(\d)+\' has viewed the discussion with id \'(\d)+\' in the forum with course module id \'(\d)+\'./.test(str):
-                            activity.type = 5;
-                            break;
-                        case /The user with id \'(\d)+\' has created the discussion with id \'(\d)+\' in the forum with course module id \'(\d)+\'/.test(str):
-                            activity.type = 6;
-                            break;
-                        case /The user with id \'(\d)+\' has created the post with id \'(\d)+\' in the discussion with id \'(\d)+\' in the forum with course module id \'(\d)+\'./.test(str):
-                            activity.type = 7;
-                            break;
-                        default:
-                            break;
-                    }
-                    if (activity.type != null) {
-                        activity.student = str.match(/The user with id \'(\d+)\'/)[1];
-                        //TODO: take out teachers activity
-                        //if (students.find(el => el['id'] == activity.student)) {
-                            activity.date = elem.date;
-                            activity.course = element.id;
-                            activities.push(activity);
-                        //}
-                    }
-                });
-            });
+        let file = fs.readFileSync('files/logs_' + element.id + '.csv', 'utf8');
+        const results = Papa.parse(file, { header: true });
+        results.data.forEach(elem => {
+            let str = elem.Description;
+            let activity = {};
+            switch (true) {
+                case /The user with id \'(\d)+\' has viewed the submission status page for the assignment with course module id \'(\d)+\'./.test(str):
+                    activity.type = 1;
+                    break;
+                case /The user with id \'(\d)+\' has submitted the submission with id \'(\d)+\' for the assignment with course module id \'(\d)+\'./.test(str):
+                    activity.type = 2;
+                    break;
+                case /The user with id \'(\d)+\' has submitted the attempt with id \'(\d)+\' for the quiz with course module id \'(\d)+\'./.test(str):
+                    activity.type = 3;
+                    break;
+                case /The user with id \'(\d)+\' viewed the 'quiz' activity with course module id \'(\d)+\'/.test(str):
+                    activity.type = 4;
+                    break;
+                case /The user with id \'(\d)+\' has viewed the discussion with id \'(\d)+\' in the forum with course module id \'(\d)+\'./.test(str):
+                    activity.type = 5;
+                    break;
+                case /The user with id \'(\d)+\' has created the discussion with id \'(\d)+\' in the forum with course module id \'(\d)+\'/.test(str):
+                    activity.type = 6;
+                    break;
+                case /The user with id \'(\d)+\' has created the post with id \'(\d)+\' in the discussion with id \'(\d)+\' in the forum with course module id \'(\d)+\'./.test(str):
+                    activity.type = 7;
+                    break;
+                default:
+                    break;
+            }
+            if (activity.type != null) {
+                activity.student = str.match(/The user with id \'(\d+)\'/)[1];
+                //TODO: take out teachers activity
+                //if (students.find(el => el['id'] == activity.student)) {
+                activity.date = elem['Time'];
+                activity.course = element.id;
+                activities.push(activity);
+                //}
+            }
+        });
     });
+    console.log(activities);
+    return activities;
 }
 function get_enrolled_students(courses) {
     let params = new URLSearchParams([
@@ -231,6 +226,22 @@ function load_students_to_db(students, course) {
 
         sql = 'INSERT INTO Student_in_Course (student, course) VALUES ' + students.map((x) => '(?,?)').join(',') + ';';
         params = [].concat.apply([], students.map((x) => [x['id'], course['id']]));
+        db.run(sql, params,
+            function (err, result) {
+                if (err) {
+                    console.error(sql);
+                    console.error(err);
+                    console.trace();
+                    return err;
+                }
+            }
+        );
+    }
+}
+function load_activities_to_db(activities) {
+    if (activities.length > 0) {
+        let sql = 'INSERT INTO Activity (date, student, course, type) VALUES ' + activities.map((x) => '(?,?,?,?)').join(',') + ';';
+        let params = [].concat.apply([], activities.map((x) => [x['date'], x['student'], x['course'],x['type']]));
         db.run(sql, params,
             function (err, result) {
                 if (err) {
