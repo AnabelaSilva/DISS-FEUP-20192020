@@ -15,9 +15,12 @@
 /* RESET
    ========================================================================== */
 
-
+main {
+  height: 100%;
+}
 html {
   box-sizing: border-box;
+  height: 100%;
 }
 
 *, *::before, *::after {
@@ -33,6 +36,7 @@ html {
 
 body {
   font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Oxygen-Sans,Ubuntu,Cantarell,"Helvetica Neue",sans-serif; /* [2] */
+  height: 100%;
 }
 
 
@@ -57,9 +61,10 @@ body {
    ========================================================================== */
 
 .container {
-  margin: 0 auto;
+  margin: 0 100px;
   display: grid;
   grid-gap: 20px;
+  height: 100%;
 }
 
 /* Buttons

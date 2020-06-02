@@ -5,7 +5,6 @@ window.onload = function () {
     let datasets = [];
     labels = [];
     results.forEach(element => {
-        console.log(element.name);
         let set = datasets.find(el => { return el.label == element.name; });
         let label = labels.find(el => { return el == element.WeekNumber; });
         if (label == null) {
@@ -35,4 +34,36 @@ window.onload = function () {
             }
         }
     });
+
+    // let labelsPie = []; 
+    // let dataPie = [];
+    // pieResults.forEach(element => {
+    //     switch (element.DaysSinceActivity) {
+    //         case value:
+                
+    //             break;
+        
+    //         default:
+    //             break;
+    //     }
+    // });
+    // var ctx_pie = document.getElementById('myPie').getContext('2d');
+    // var pieChart = new Chart(ctx_pie, {
+    //     type: 'pie',
+    //     data: {
+    //         datasets: [{
+    //             data: dataPie
+    //         }],
+    //         labels: labelsPie
+    //     },
+    //     options: {
+    //         responsive: true,
+    //         hoverMode: 'index',
+    //         fill: false,
+    //         title: {
+    //             display: true,
+    //             text: 'Days since last Activity'
+    //         }
+    //     }
+    // });
 }

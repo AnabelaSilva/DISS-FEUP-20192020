@@ -26,8 +26,18 @@ app.get('/grades', (req, res) => {
         console.trace();
         return err;
       }
-      console.log(rows);
-      res.render('show', { java: 'charts', data: rows });
+      let activity_by_course = rows;
+      sql = "SELECT DaysSinceActivity, count(id) AS NumberOfStudents FROM(SELECT CAST(julianday('now') - julianday(max(date)) AS Integer) AS DaysSinceActivity, id FROM Student LEFT JOIN Activity ON (Student.id = Activity.student) GROUP BY student)GROUP By DaysSinceActivity;";
+      db.all(sql, params,
+        function (err, rows) {
+          if (err) {
+            console.error(err);
+            console.trace();
+            return err;
+          }
+          console.log(rows);
+          res.render('show', { java: 'charts', data: activity_by_course, pieResults: rows});
+        });
     }
   );
 });
