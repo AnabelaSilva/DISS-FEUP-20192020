@@ -1,5 +1,11 @@
 extends default
 
 block content
-  div.container
-    p I Exist
+    div.container
+        div.container
+            script(src='javascript/index_charts.js')
+            script(src="https://cdn.jsdelivr.net/npm/chart.js@2.8.0")
+            script(src="https://canvasjs.com/assets/script/canvasjs.min.js")
+            canvas(id="myChart")
+            script.
+                let results = !{JSON.stringify(data)};
