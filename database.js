@@ -9,5 +9,24 @@ let db = new sqlite3.Database(DBSOURCE, (err) => {
   }
 });
 
+function delete_all_records_from_db() {
+  let tables = ['Grade', 'Evaluation', 'Submission', 'Assign', 'Post', 'Forum', 'Attempt', 'Quiz', 'Student_in_Course', 'Student', 'Course'];
+  let sql = 'DELETE FROM ';
+  tables.forEach(element => {
+    let sql_cmd = sql + element + ';';
+    db.run(sql_cmd, [],
+      function (err, result) {
+        if (err) {
+          console.error(err);
+          console.trace();
+          return err;
+        }
+      }
+    );
+  });
+}
 
-module.exports = db
+module.exports = {
+  db: db,
+  delete_all_records_from_db: delete_all_records_from_db
+};
