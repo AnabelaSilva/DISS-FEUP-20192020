@@ -5,14 +5,15 @@ const { db, delete_all_records_from_db } = require("./database.js");
 
 const SQLITE_LIMIT_VARIABLE_NUMBER = 999;
 const url = new URL('http://localhost/webservice/rest/server.php');
-const params = new URLSearchParams([
+const params_base = [
     ['wstoken', 'a369f680e3cb5fab20997372ed53d1e1'],
     ['moodlewsrestformat', 'json']
-]);
+];
 var userid;
 const STUDENT_ROLE_ID = 5;
 function load_database() {
     delete_all_records_from_db();
+    let params = new URLSearchParams(params_base);
     params.set('wsfunction', 'core_webservice_get_site_info');
     url.search = params;
     fetch(url)
@@ -24,6 +25,7 @@ function load_database() {
 }
 
 function fetch_courses(userid) {
+    let params = new URLSearchParams(params_base);
     params.set('wsfunction', 'core_enrol_get_users_courses');
     params.set('userid', userid);
     url.search = params;
@@ -37,6 +39,7 @@ function fetch_courses(userid) {
         });
 }
 function fetch_students(courses) {
+    let params = new URLSearchParams(params_base);
     params.set('wsfunction', 'core_enrol_get_enrolled_users');
     let promises = [];
     let students_all = [];
@@ -53,12 +56,14 @@ function fetch_students(courses) {
     });
     Promise.all(promises).then(data => {
         students_all = students_all.filter((v, i, a) => a.findIndex(t => (t.id === v.id)) === i);
-        // fetch_quizzes(students_all);
-        // fetch_assigns(students_all);
+        fetch_quizzes(students_all);
+        fetch_assigns(students_all);
         fetch_evaluations(courses);
+        //TODO: fetch_forums();
     });
 }
 function fetch_evaluations(courses) {
+    let params = new URLSearchParams(params_base);
     params.set('wsfunction', 'gradereport_user_get_grade_items');
     courses.forEach(element => {
         params.set('courseid', element['id']);
@@ -67,11 +72,12 @@ function fetch_evaluations(courses) {
             .then(response => response.json())
             .then(data => {
                 let res = parse_list_of_evaluations(data);
-                //load_evaluations_to_db(res);
+                load_evaluations_to_db(res);
             });
     });
 }
 function fetch_quizzes(students_all) {
+    let params = new URLSearchParams(params_base);
     params.set('wsfunction', 'mod_quiz_get_quizzes_by_courses');
     params.delete('courseid');
     url.search = params;
@@ -84,6 +90,7 @@ function fetch_quizzes(students_all) {
         });
 }
 function fetch_assigns(students_all) {
+    let params = new URLSearchParams(params_base);
     params.set('wsfunction', 'mod_assign_get_assignments');
     params.delete('courseid');
     url.search = params;
@@ -96,6 +103,7 @@ function fetch_assigns(students_all) {
         });
 }
 function fetch_submissions(assigns) {
+    let params = new URLSearchParams(params_base);
     params.set('wsfunction', 'mod_assign_get_submissions');
     for (let index = 0; index < assigns.length; index++) {
         const element = assigns[index];
@@ -109,25 +117,36 @@ function fetch_submissions(assigns) {
             load_submissions_to_db(submissions);
         });
 }
-function fetch_attempts(quizzes, students_all) {
-    params.set('wsfunction', 'mod_quiz_get_user_attempts');
-    params.set('status', 'all');
-    quizzes.forEach(quiz => {
+function space_out_requestes(params, quizzes, index, students_all) {
+    if (index < quizzes.length) {
+        let quiz = quizzes[index];
         params.set('quizid', quiz.id);
+        let promises = [];
         students_all.forEach(student => {
             params.set('userid', student.id);
             url.search = params;
-            fetch(url)
+            promises.push(fetch(url)
                 .then(response => response.json())
                 .then(data => {
                     let attempts = parse_list_of_attempts(data);
                     load_attempts_to_db(attempts);
-                });
+                }));
         });
-    });
+        Promise.all(promises).then(data => {
+            index = index + 1;
+            space_out_requestes(params, quizzes, index, students_all);
+        });
+    }
+}
+function fetch_attempts(quizzes, students_all) {
+    let params = new URLSearchParams(params_base);
+    params.set('wsfunction', 'mod_quiz_get_user_attempts');
+    params.delete('courseid');
+    params.set('status', 'all');
+    let index = 0;
+    space_out_requestes(params, quizzes, index, students_all);
 
 }
-
 function load_courses_to_db(courses) {
     let sql = 'INSERT INTO Course (id, name) VALUES ' + courses.map((x) => '(?,?)').join(',') + ';';
     let params = [].concat.apply([], courses.map((x) => [x['id'], x['name']]));
@@ -188,6 +207,23 @@ function load_evaluations_to_db(res) {
                 }
             );
 
+        }
+        aux = res.grades;
+        for (let index = 0; index < aux.length; index = index + Math.trunc(SQLITE_LIMIT_VARIABLE_NUMBER / 7)) {
+            let eval_aux = aux.slice(index, index + Math.trunc(SQLITE_LIMIT_VARIABLE_NUMBER / 7));
+            sql = 'INSERT INTO Grade (student, value, evaluation) VALUES ' + eval_aux.map((x) => '(?,?,?)').join(',') + ';';
+            let params = [].concat.apply([], eval_aux.map((x) => [x['student'], x['value'], x['evaluation']]));
+            db.run(sql, params,
+                function (err, result) {
+                    if (err) {
+                        console.error(sql);
+                        console.error(err);
+                        console.trace();
+                        return err;
+                    }
+                }
+
+            );
         }
     }
 }
@@ -284,7 +320,6 @@ function parse_list_of_submissions(data) {
     });
     return submissions;
 }
-
 function parse_list_of_quizzes(data) {
     let quizzes = [];
     data.quizzes.forEach(element => {
