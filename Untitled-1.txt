@@ -1,11 +1,11 @@
+mod_quiz_get_quizzes_by_courses
+mod_quiz_get_user_attempts
 
-core_enrol_get_users_courses
-core_enrol_get_enrolled_users
-gradereport_user_get_grade_items
-mod_assign_get_assignments
-mod_assign_get_submissions
+
+
 mod_forum_get_forums_by_courses
 mod_forum_get_forum_discussions
 mod_forum_get_discussion_posts
-mod_quiz_get_quizzes_by_courses
-mod_quiz_get_user_attempts
+
+
+gradereport_user_get_grade_items

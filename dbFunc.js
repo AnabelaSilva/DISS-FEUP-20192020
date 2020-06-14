@@ -3,6 +3,7 @@ const fetch = require('node-fetch');
 const { db, delete_all_records_from_db } = require("./database.js");
 
 
+const SQLITE_LIMIT_VARIABLE_NUMBER = 999;
 const url = new URL('http://localhost/webservice/rest/server.php');
 const params = new URLSearchParams([
     ['wstoken', 'a369f680e3cb5fab20997372ed53d1e1'],
@@ -37,18 +38,96 @@ function fetch_courses(userid) {
 }
 function fetch_students(courses) {
     params.set('wsfunction', 'core_enrol_get_enrolled_users');
+    let promises = [];
+    let students_all = [];
+    courses.forEach(element => {
+        params.set('courseid', element['id']);
+        url.search = params;
+        promises.push(fetch(url)
+            .then(response => response.json())
+            .then(data => {
+                let students = parse_list_of_students(data);
+                load_students_to_db(students, element);
+                students_all = students_all.concat(students);
+            }));
+    });
+    Promise.all(promises).then(data => {
+        students_all = students_all.filter((v, i, a) => a.findIndex(t => (t.id === v.id)) === i);
+        // fetch_quizzes(students_all);
+        // fetch_assigns(students_all);
+        fetch_evaluations(courses);
+    });
+}
+function fetch_evaluations(courses) {
+    params.set('wsfunction', 'gradereport_user_get_grade_items');
     courses.forEach(element => {
         params.set('courseid', element['id']);
         url.search = params;
         fetch(url)
             .then(response => response.json())
             .then(data => {
-                console.log(data);
-                let students = parse_list_of_students(data);
-                load_students_to_db(students, element);
+                let res = parse_list_of_evaluations(data);
+                //load_evaluations_to_db(res);
             });
     });
 }
+function fetch_quizzes(students_all) {
+    params.set('wsfunction', 'mod_quiz_get_quizzes_by_courses');
+    params.delete('courseid');
+    url.search = params;
+    fetch(url)
+        .then(response => response.json())
+        .then(data => {
+            let quizzes = parse_list_of_quizzes(data);
+            load_quizzes_to_db(quizzes);
+            fetch_attempts(quizzes, students_all);
+        });
+}
+function fetch_assigns(students_all) {
+    params.set('wsfunction', 'mod_assign_get_assignments');
+    params.delete('courseid');
+    url.search = params;
+    fetch(url)
+        .then(response => response.json())
+        .then(data => {
+            let assigns = parse_list_of_assigns(data);
+            load_assigns_to_db(assigns);
+            fetch_submissions(assigns);
+        });
+}
+function fetch_submissions(assigns) {
+    params.set('wsfunction', 'mod_assign_get_submissions');
+    for (let index = 0; index < assigns.length; index++) {
+        const element = assigns[index];
+        params.set('assignmentids[' + index + ']', element.id);
+    }
+    url.search = params;
+    fetch(url)
+        .then(response => response.json())
+        .then(data => {
+            let submissions = parse_list_of_submissions(data);
+            load_submissions_to_db(submissions);
+        });
+}
+function fetch_attempts(quizzes, students_all) {
+    params.set('wsfunction', 'mod_quiz_get_user_attempts');
+    params.set('status', 'all');
+    quizzes.forEach(quiz => {
+        params.set('quizid', quiz.id);
+        students_all.forEach(student => {
+            params.set('userid', student.id);
+            url.search = params;
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    let attempts = parse_list_of_attempts(data);
+                    load_attempts_to_db(attempts);
+                });
+        });
+    });
+
+}
+
 function load_courses_to_db(courses) {
     let sql = 'INSERT INTO Course (id, name) VALUES ' + courses.map((x) => '(?,?)').join(',') + ';';
     let params = [].concat.apply([], courses.map((x) => [x['id'], x['name']]));
@@ -91,7 +170,139 @@ function load_students_to_db(students, course) {
         );
     }
 }
+function load_evaluations_to_db(res) {
+    if (res.evaluations.length > 0) {
+        let aux = res.evaluations;
+        for (let index = 0; index < aux.length; index = index + Math.trunc(SQLITE_LIMIT_VARIABLE_NUMBER / 7)) {
+            let eval_aux = aux.slice(index, index + Math.trunc(SQLITE_LIMIT_VARIABLE_NUMBER / 7));
+            let sql = 'INSERT INTO Evaluation (id, name, course, type_id) VALUES ' + eval_aux.map((x) => '(?,?,?,?)').join(',') + ';';
+            let params = [].concat.apply([], eval_aux.map((x) => [x['id'], x['name'], x['course'], x['type_id']]));
+            db.run(sql, params,
+                function (err, result) {
+                    if (err) {
+                        console.error(sql);
+                        console.error(err);
+                        console.trace();
+                        return err;
+                    }
+                }
+            );
 
+        }
+    }
+}
+function load_quizzes_to_db(quizzes) {
+    let sql = 'INSERT INTO Quiz (id, course, attempts_permitted) VALUES ' + quizzes.map((x) => '(?,?,?)').join(',') + ';';
+    let params = [].concat.apply([], quizzes.map((x) => [x['id'], x['course'], x['attempts']]));
+    db.run(sql, params,
+        function (err, result) {
+            if (err) {
+                console.error(err);
+                console.trace();
+                return err;
+            }
+        }
+    );
+}
+function load_attempts_to_db(attempts) {
+    if (attempts.length > 0) {
+        let sql = 'INSERT INTO Attempt (student, quiz, start, finish) VALUES ' + attempts.map((x) => '(?,?,?,?)').join(',') + ';';
+        let params = [].concat.apply([], attempts.map((x) => [x['student'], x['quiz'], x['start'], x['finish']]));
+        db.run(sql, params,
+            function (err, result) {
+                if (err) {
+                    console.error(err);
+                    console.trace();
+                    return err;
+                }
+            }
+        );
+    }
+}
+function load_submissions_to_db(submissions) {
+    if (submissions.length > 0) {
+        let sql = 'INSERT INTO Submission (student, assign, created) VALUES ' + submissions.map((x) => '(?,?,?)').join(',') + ';';
+        let params = [].concat.apply([], submissions.map((x) => [x['student'], x['assign'], x['created']]));
+        db.run(sql, params,
+            function (err, result) {
+                if (err) {
+                    console.error(err);
+                    console.trace();
+                    return err;
+                }
+            }
+        );
+    }
+}
+function load_assigns_to_db(assigns) {
+    if (assigns.length > 0) {
+        let sql = 'INSERT INTO Assign (id, course, due_date) VALUES ' + assigns.map((x) => '(?,?,?)').join(',') + ';';
+        let params = [].concat.apply([], assigns.map((x) => [x['id'], x['course'], x['duedate']]));
+        db.run(sql, params,
+            function (err, result) {
+                if (err) {
+                    console.error(err);
+                    console.trace();
+                    return err;
+                }
+            }
+        );
+    }
+}
+function parse_list_of_attempts(data) {
+    let attempts = [];
+    data.attempts.forEach(element => {
+        let quiz = { 'id': element.id, 'quiz': element.quiz, 'student': element.userid, 'start': element.timestart == 0 ? null : element.timestart, 'finish': element.timefinish == 0 ? null : element.timefinish };
+        attempts.push(quiz);
+    });
+    return attempts;
+}
+function parse_list_of_evaluations(data) {
+    let evaluations = [];
+    let grades = [];
+    data.usergrades.forEach(elem => {
+        let course_id = elem.courseid;
+        let student = elem.userid;
+        elem.gradeitems.forEach(element => {
+            let eval = { 'id': element.id, 'name': element.itemname, 'type_id': element.itemtype, 'course': course_id };
+            let grade = { 'student': student, 'value': element.percentageformatted, 'evaluation': element.id };
+            evaluations.push(eval);
+            grades.push(grade);
+        });
+    });
+    evaluations = evaluations.filter((v, i, a) => a.findIndex(t => (t.id === v.id)) === i);
+    return { 'evaluations': evaluations, 'grades': grades };
+}
+function parse_list_of_submissions(data) {
+    let submissions = [];
+    data.assignments.forEach(elem => {
+        let assign_id = elem.assignmentid;
+        elem.submissions.forEach(element => {
+            let submission = { 'student': element.userid, 'assign': assign_id, 'created': element.timecreated };
+            submissions.push(submission);
+        });
+    });
+    return submissions;
+}
+
+function parse_list_of_quizzes(data) {
+    let quizzes = [];
+    data.quizzes.forEach(element => {
+        let quiz = { 'id': element.id, 'course': element.course, 'attempts': element.attempts == 0 ? null : element.attempts };
+        quizzes.push(quiz);
+    });
+    return quizzes;
+}
+function parse_list_of_assigns(data) {
+    let assigns = [];
+    data.courses.forEach(elem => {
+        elem.assignments.forEach(element => {
+            let assign = { 'id': element.id, 'course': element.course, 'duedate': element.duedate == 0 ? null : element.duedate };
+            assigns.push(assign);
+        });
+    });
+    return assigns;
+}
 function parse_list_of_courses(data) {
     let courses = [];
     data.forEach(element => {
