@@ -59,7 +59,7 @@ function fetch_students(courses) {
         fetch_quizzes(students_all);
         fetch_assigns(students_all);
         fetch_evaluations(courses);
-        //TODO: fetch_forums();
+        fetch_forums();
     });
 }
 function fetch_evaluations(courses) {
@@ -101,6 +101,48 @@ function fetch_assigns(students_all) {
             load_assigns_to_db(assigns);
             fetch_submissions(assigns);
         });
+}
+function fetch_forums() {
+    let params = new URLSearchParams(params_base);
+    params.set('wsfunction', 'mod_forum_get_forums_by_courses');
+    url.search = params;
+    fetch(url)
+        .then(response => response.json())
+        .then(data => {
+            let forums = parse_list_of_forums(data);
+            load_forums_to_db(forums);
+            fetch_discussions(forums)
+        });
+}
+function fetch_posts(discussions, forum) {
+    let params = new URLSearchParams(params_base);
+    params.set('wsfunction', 'mod_forum_get_discussion_posts');
+    url.search = params;
+    discussions.forEach(element => {
+        params.set('discussionid', element['discussion_id']);
+        url.search = params;
+        fetch(url)
+            .then(response => response.json())
+            .then(data => {
+                let posts = parse_list_of_posts(data, forum);
+                load_posts_to_db(posts);
+            });
+    });
+}
+function fetch_discussions(forums) {
+    let params = new URLSearchParams(params_base);
+    params.set('wsfunction', 'mod_forum_get_forum_discussions');
+    let promises = [];
+    forums.forEach(element => {
+        params.set('forumid', element['id']);
+        url.search = params;
+        promises.push(fetch(url)
+            .then(response => response.json())
+            .then(data => {
+                let discussions = parse_list_of_discussions(data);
+                fetch_posts(discussions,  element['id']);
+            }));
+    });
 }
 function fetch_submissions(assigns) {
     let params = new URLSearchParams(params_base);
@@ -240,10 +282,38 @@ function load_quizzes_to_db(quizzes) {
         }
     );
 }
+function load_forums_to_db(forums) {
+    let sql = 'INSERT INTO Forum (id, course) VALUES ' + forums.map((x) => '(?,?)').join(',') + ';';
+    let params = [].concat.apply([], forums.map((x) => [x['id'], x['course']]));
+    db.run(sql, params,
+        function (err, result) {
+            if (err) {
+                console.error(err);
+                console.trace();
+                return err;
+            }
+        }
+    );
+}
 function load_attempts_to_db(attempts) {
     if (attempts.length > 0) {
         let sql = 'INSERT INTO Attempt (student, quiz, start, finish) VALUES ' + attempts.map((x) => '(?,?,?,?)').join(',') + ';';
         let params = [].concat.apply([], attempts.map((x) => [x['student'], x['quiz'], x['start'], x['finish']]));
+        db.run(sql, params,
+            function (err, result) {
+                if (err) {
+                    console.error(err);
+                    console.trace();
+                    return err;
+                }
+            }
+        );
+    }
+}
+function load_posts_to_db(posts) {
+    if (posts.length > 0) {
+        let sql = 'INSERT INTO Post (student, forum, created, type) VALUES ' + posts.map((x) => '(?,?,?,?)').join(',') + ';';
+        let params = [].concat.apply([], posts.map((x) => [x['student'], x['forum'], x['created'], x['type']]));
         db.run(sql, params,
             function (err, result) {
                 if (err) {
@@ -327,6 +397,30 @@ function parse_list_of_quizzes(data) {
         quizzes.push(quiz);
     });
     return quizzes;
+}
+function parse_list_of_forums(data) {
+    let forums = [];
+    data.forEach(element => {
+        let forum = { 'id': element.id, 'course': element.course};
+        forums.push(forum);
+    });
+    return forums;
+}
+function parse_list_of_discussions(data) {
+    let discussions = [];
+    data.discussions.forEach(element => {
+        let discussion = { 'id': element.id, 'discussion_id': element.discussion};
+        discussions.push(discussion);
+    });
+    return discussions;
+}
+function parse_list_of_posts(data, forum) {
+    let posts = [];
+    data.posts.forEach(element => {
+        let post = { 'student': element.author.id, 'created': element.timecreated, 'forum': forum, 'type': element.hasparent?1:0};
+        posts.push(post);
+    });
+    return posts;
 }
 function parse_list_of_assigns(data) {
     let assigns = [];
