@@ -1,3 +1,0 @@
-mod_forum_get_forums_by_courses
-mod_forum_get_forum_discussions
-mod_forum_get_discussion_posts

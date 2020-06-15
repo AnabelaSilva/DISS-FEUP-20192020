@@ -27,8 +27,7 @@ app.get('/', (req, res) => {
   res.render('index', { title: 'Homepage', data: {} });
 });
 
-app.get('/grades', (req, res) => {
-});
+
 app.get('/student', (req, res) => {
   let sql = "SELECT Student.name AS StudentName, Course.name AS CourseName, Evaluation.name AS EvaluationName, value FROM Student JOIN Student_in_Course ON (Student.id = Student_in_Course.student)  JOIN Grade ON (Student.id = Grade.student)  JOIN Evaluation ON (Grade.evaluation = Evaluation.id AND Evaluation.course = Student_in_Course.course)  JOIN Course ON (Course.id = Student_in_Course.course) WHERE Student.id = ? ORDER BY Course.id;";
   let params = [parseInt(req.query.id)];
@@ -58,10 +57,8 @@ app.get('/student', (req, res) => {
   );
 });
 app.get('/reload', (req, res) => {
-  console.log("HERE");
-  // load_.load_database();
-  // res.redirect('/');
   dbFunc.routeReload();
+  // res.redirect('/');
   res.send('aaaa' + 404);
 });
 
