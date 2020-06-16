@@ -11,11 +11,11 @@ app.set('view engine', 'pug');
 app.use(express.static(__dirname + '/public'));
 
 app.get('/', (req, res) => {
-  
-  let act = queries.get_activities_from_all_students();
-  
-  Promise.all([act]).then((values) => {
-    res.render('index', { title: 'Mestrado em Tecnologias e Sistemas Informáticos Web', histogram_data: values[0]});
+  let promises = [];
+  promises.push(queries.get_activities_from_all_students());
+  promises.push(queries.get_evaluations());
+  Promise.all(promises).then((values) => {
+    res.render('index', { title: 'Mestrado em Tecnologias e Sistemas Informáticos Web', histogram_data: values[0], box_data: values[1]});
   });
 
 });

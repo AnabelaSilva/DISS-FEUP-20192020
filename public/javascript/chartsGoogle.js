@@ -2,7 +2,11 @@
 google.charts.load('current', { 'packages': ['corechart'] });
 
 // Set a callback to run when the Google Visualization API is loaded.
-google.charts.setOnLoadCallback(drawHistogram);
+google.charts.setOnLoadCallback(drawALL);
+function drawALL() {
+    drawHistogram();
+    drawBoxAndWhiskers();
+}
 
 function drawHistogram() {
     let data = new google.visualization.DataTable();
@@ -30,24 +34,52 @@ function drawHistogram() {
     chart.draw(data, options);
 }
 
-function drawVisualization() {
-    // Create and populate the data table. Column 6: median, Column 7: mean. Values are invented!
-    var data = google.visualization.arrayToDataTable([['Serie1', 20, 28, 38, 45, 20, 25], ['Serie2', 31, 38, 55, 66, 30, 35], ['Serie3', 50, 55, 77, 80, 10, 15], ['Serie4', 77, 77, 66, 50, 20, 25], ['Serie5', 68, 66, 22, 15, 30, 35]],
-        true); // Treat first row as data as well.
-
-
-    // Create and draw the visualization.
-    var ac = new google.visualization.ComboChart(document.getElementById('visualization'));
-    ac.draw(data, {
-        title: 'Box Plot with Median and Average',
-        width: 600,
-        height: 400,
-        vAxis: { title: "Value" },
-        hAxis: { title: "Serie ID" },
-        series: {
-            0: { type: "candlesticks" },
-            1: { type: "line", pointSize: 10, lineWidth: 0 },
-            2: { type: "line", pointSize: 10, lineWidth: 0, color: 'black' }
-        }
+function drawBoxAndWhiskers() {
+    let data_p = [];
+    box_data.forEach(course => {
+        if (course != null)
+            course.evals.forEach(element => {
+                if (element != null) {
+                    data_p.push([element.name, element.min,element.min, element.Q1, element.median, element.Q3, element.max]);
+                }
+            });
     });
+
+    let data = new google.visualization.DataTable();
+
+    // Declare columns
+    data.addColumn('string', 'Evaluation');
+    data.addColumn('number', 'TTTTTTT')
+    data.addColumn({ id: 'min', type: 'number', role: 'interval' });
+    data.addColumn({ id: 'firstQuartile', type: 'number', role: 'interval' });
+    data.addColumn({ id: 'median', type: 'number', role: 'interval' });
+    data.addColumn({ id: 'thirdQuartile', type: 'number', role: 'interval' });
+    data.addColumn({ id: 'max', type: 'number', role: 'interval' });
+    // Add data.
+    data.addRows(data_p);
+    let options = {
+        title: 'Box Plot',
+        legend: { position: 'none' },
+        lineWidth: 0,
+        intervals: {
+            barWidth: 1,
+            boxWidth: 1,
+            lineWidth: 2,
+            style: 'boxes'
+        },
+        interval: {
+            max: {
+                style: 'bars',
+                fillOpacity: 1,
+                color: '#777'
+            },
+            min: {
+                style: 'bars',
+                fillOpacity: 1,
+                color: '#777'
+            }
+        }
+    };
+    let chart = new google.visualization.LineChart(document.getElementById('box_plot'));
+    chart.draw(data, options);
 }
