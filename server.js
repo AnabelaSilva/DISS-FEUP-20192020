@@ -1,30 +1,20 @@
 const express = require('express');
 const app = express();
-// const load_ = require('./load_database.js');
+
 
 const dbFunc = require('./dbFunc.js');
-
 let db = require("./database.js");
+const queries = require('./queries.js');
 
 app.set('view engine', 'pug');
 
 app.use(express.static(__dirname + '/public'));
 
 app.get('/', (req, res) => {
-  // let sql = "SELECT CAST(((julianday(date) - julianday('2020-03-10T00:00:00'))/7) AS Integer) AS WeekNumber, name, 1.0*count(date)/NumStudents AS VisitByStudent FROM Activity JOIN Course ON(Course.id = Activity.course)  JOIN (SELECT count(student) AS NumStudents, course FROM Student_in_Course Group by course) AS tab_1 ON(Course.id = tab_1.course) GROUP BY Activity.course, WeekNumber;";
-  // let params = [];
-  // db.all(sql, params,
-  //   function (err, rows) {
-  //     if (err) {
-  //       console.error(err);
-  //       console.trace();
-  //       return err;
-  //     }
-  //     let activity_by_course = rows;
-  //     res.render('index', { title: 'Homepage', data: activity_by_course });
-  //   }
-  // );
-  res.render('index', { title: 'Homepage', data: {} });
+  
+  let act = queries.get_activities_from_all_students();
+  console.log(act);
+  res.render('index', { title: 'Mestrado em Tecnologias e Sistemas Informáticos Web'});
 });
 
 

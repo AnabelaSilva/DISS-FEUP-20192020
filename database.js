@@ -1,6 +1,6 @@
 var sqlite3 = require('sqlite3').verbose();
 
-const DBSOURCE = "DISS.db";
+const DBSOURCE = "LOAD/NEW.db";
 
 let db = new sqlite3.Database(DBSOURCE, (err) => {
   if (err) {

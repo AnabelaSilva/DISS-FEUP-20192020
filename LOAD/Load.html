@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Hello World</title>
+    <!-- Your external script -->
+    <script src="https://d3js.org/d3.v5.min.js"></script>
+
+</head>
+
+<body>
+    <div id='p'></div>
+</body>
+<script type="text/javascript">
+
+    let good_students = [1, 2, 3, 4, 8, 9, 10, 11, 12, 15, 18, 19, 20, 21, 21, 23, 24, 25, 26, 27, 30];
+    let no_students = [13, 16, 29];
+    let bad_students = [5, 6, 7, 14, 17, 28, 31];
+    let topics;
+    let s_in_c;
+    let posts = [];
+    let attemps = [];
+    let submissions = [];
+    let forums = [];
+    let quizzes = [];
+    let assigns = [];
+    let beginDate = new Date(2020, 10, 20, 0, 0, 0, 0);
+    d3.dsv(';', "topics.csv").then(function (data) {
+        for (let index = 0; index < data.length; index++) {
+            let element = data[index];
+            element.start = Number(element.start);
+            element.end = Number(element.end);
+            element.course = Number(element.course);
+            element.type = Number(element.type);
+            element.id = index;
+        }
+        topics = data;
+        d3.dsv(',', "s_in_c.csv").then(function (data) {
+            data.forEach(function (d) {
+                d.student = Number(d.student);
+                d.course = Number(d.course);
+            });
+            s_in_c = data;
+            for (let index = 0; index < topics.length; index++) {
+                let topic = topics[index];
+                let DAY = Math.random() * (topic.end - topic.start + 1) + topic.start;
+                good_students.forEach(element => {
+                   if (Math.random() > 0.3) {    
+                        if (student_in_course(element, topic.course)) {
+                            participate(element, topic, DAY);
+                        }
+                    }
+                });
+                bad_students.forEach(element => {
+                    if (Math.random() > .3) {
+                        if (Math.random() > (Math.exp(Math.E, -25.0 / DAY))) {
+                            if (student_in_course(element, topic.course)) {
+                                participate(element, topic, DAY);
+                            }
+                        }
+                    }
+                });
+
+            }
+            // for (let index = 0; index < 131; index++) {
+            //     let open_topics = getOpenTopics(topics, index);
+            //     good_students.forEach(element => {
+            //         let topic = open_topics[Math.floor(Math.random() * open_topics.length)];
+            //         if (student_in_course(element, topic.course)) {
+            //             participate(element, topic, index);
+            //         }
+            //     });
+            //     bad_students.forEach(element => {
+            //         if (Math.random() > (Math.exp(Math.E, -25.0 / index))) {
+            //             let topic = open_topics[Math.floor(Math.random() * open_topics.length)];
+            //             if (student_in_course(element, topic.course)) {
+            //                 participate(element, topic, index);
+            //             }
+            //         }
+            //     });
+            // }
+            SeparedteTopics();
+        });
+    });
+    function JSONtoCSV(data) {
+        let res = Object.keys(data[0]).join() + '</br>';
+        data.forEach(element => {
+            res += Object.values(element).join() + '</br>';
+        });
+        return res;
+    }
+    function participate(student, topic, day) {
+        switch (topic.type) {
+            case 1:
+                let post = {
+                    student: student,
+                    forum: topic.id,
+                    datecreated: Math.floor(Math.floor(beginDate.getTime() + day * 1000 * 60 * 60 * 24) / 1000),
+                    type: Math.floor(Math.random() * 2)
+                };
+                posts.push(post);
+                break;
+            case 3:
+                let quiz = {
+                    student: student,
+                    quiz: topic.id,
+                    start: Math.floor(Math.floor(beginDate.getTime() + day * 1000 * 60 * 60 * 24) / 1000)
+                };
+                attemps.push(quiz);
+                break;
+            case 4:
+                let subm = {
+                    student: student,
+                    assign: topic.id,
+                    created: Math.floor(Math.floor(beginDate.getTime() + day * 1000 * 60 * 60 * 24) / 1000)
+                };
+                submissions.push(subm);
+                break;
+            default:
+                console.log("Other");
+                break;
+        }
+    }
+    function student_in_course(student, course) {
+        for (let index = 0; index < s_in_c.length; index++) {
+            const e = s_in_c[index];
+            if (e.student == student && e.course == course) {
+                return true;
+            }
+        }
+        return false;
+    }
+    function getOpenTopics(topics, day) {
+        let res = [];
+        for (let index = 0; index < topics.length; index++) {
+            const element = topics[index];
+            if (element.start <= day && day <= element.end) {
+                res.push(element);
+            }
+        }
+        return res;
+    }
+    function WriteToPage(json) {
+        let p = document.getElementById('p');
+        p.innerHTML = JSONtoCSV(json);
+    }
+    function SeparedteTopics() {
+        for (let index = 0; index < topics.length; index++) {
+            const element = topics[index];
+            switch (element.type) {
+                case 1:
+                    forums.push({ id: element.id, course: element.course });
+                    break;
+                case 3:
+                    quizzes.push({ id: element.id, course: element.course, attemps: Math.floor(Math.random() * 1.05) });
+                    break;
+                case 4:
+                    assigns.push({ id: element.id, course: element.course, due: Math.floor(Math.floor(beginDate.getTime() + element.end * 1000 * 60 * 60 * 24) / 1000) });
+                    break;
+                default:
+                    break;
+            }
+        }
+    }
+</script>
+<!-- 70% das actividades -->
+
+</html>
