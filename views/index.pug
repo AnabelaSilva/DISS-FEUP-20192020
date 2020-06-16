@@ -1,8 +1,11 @@
 extends default
 
 block content
-    script(type="text/javascript" src="https://www.gstatic.com/charts/loader.js")
-    div(id="chart_div")
+    script.
+        let histogram_data = !{JSON.stringify(histogram_data)};
+
+    div(id="histogram")
     div(id="visualization")
+
+    script(type="text/javascript" src="https://www.gstatic.com/charts/loader.js")
     script(type="text/javascript" src="javascript/chartsGoogle.js")
-        

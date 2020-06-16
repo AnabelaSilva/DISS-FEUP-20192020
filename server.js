@@ -13,8 +13,11 @@ app.use(express.static(__dirname + '/public'));
 app.get('/', (req, res) => {
   
   let act = queries.get_activities_from_all_students();
-  console.log(act);
-  res.render('index', { title: 'Mestrado em Tecnologias e Sistemas Informáticos Web'});
+  
+  Promise.all([act]).then((values) => {
+    res.render('index', { title: 'Mestrado em Tecnologias e Sistemas Informáticos Web', histogram_data: values[0]});
+  });
+
 });
 
 

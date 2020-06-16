@@ -1,3 +1,35 @@
+// Load the Visualization API and the corechart package.
+google.charts.load('current', { 'packages': ['corechart'] });
+
+// Set a callback to run when the Google Visualization API is loaded.
+google.charts.setOnLoadCallback(drawHistogram);
+
+function drawHistogram() {
+    let data = new google.visualization.DataTable();
+
+    // Declare columns
+    data.addColumn('string', 'Student');
+    data.addColumn('number', 'Percentage of participation');
+
+    // Add data.
+    data.addRows(histogram_data);
+    var options = {
+        title: 'Distribution of the students by the percentage of participated activities',
+        legend: { position: 'none' },
+        hAxis: {
+            title: 'Percentage of participated activities',
+            viewWindowMode: 'maximized',
+            viewWindow: { max: 100 }
+        },
+        vAxis: {
+            title: 'Number of students'
+        }
+    };
+
+    let chart = new google.visualization.Histogram(document.getElementById('histogram'));
+    chart.draw(data, options);
+}
+
 function drawVisualization() {
     // Create and populate the data table. Column 6: median, Column 7: mean. Values are invented!
     var data = google.visualization.arrayToDataTable([['Serie1', 20, 28, 38, 45, 20, 25], ['Serie2', 31, 38, 55, 66, 30, 35], ['Serie3', 50, 55, 77, 80, 10, 15], ['Serie4', 77, 77, 66, 50, 20, 25], ['Serie5', 68, 66, 22, 15, 30, 35]],
@@ -14,44 +46,8 @@ function drawVisualization() {
         hAxis: { title: "Serie ID" },
         series: {
             0: { type: "candlesticks" },
-            1: {type: "line", pointSize: 10, lineWidth: 0},
+            1: { type: "line", pointSize: 10, lineWidth: 0 },
             2: { type: "line", pointSize: 10, lineWidth: 0, color: 'black' }
         }
     });
-}
-
-// Load the Visualization API and the corechart package.
-google.charts.load('current', { 'packages': ['corechart'] });
-
-// Set a callback to run when the Google Visualization API is loaded.
-google.charts.setOnLoadCallback(drawChart);
-
-// Callback that creates and populates a data table,
-// instantiates the pie chart, passes in the data and
-// draws it.
-function drawChart() {
-
-    // Create the data table.
-    var data = new google.visualization.DataTable();
-    data.addColumn('string', 'Topping');
-    data.addColumn('number', 'Slices');
-    data.addRows([
-        ['Mushrooms', 3],
-        ['Onions', 1],
-        ['Olives', 1],
-        ['Zucchini', 1],
-        ['Pepperoni', 2]
-    ]);
-
-    // Set chart options
-    var options = {
-        'title': 'How Much Pizza I Ate Last Night',
-        'width': 400,
-        'height': 300
-    };
-
-    // Instantiate and draw our chart, passing in some options.
-    var chart = new google.visualization.PieChart(document.getElementById('chart_div'));
-    chart.draw(data, options);
-    drawVisualization();
 }
