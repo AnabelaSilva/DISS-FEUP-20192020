@@ -110,13 +110,7 @@ function drawBoxAndWhiskers() {
 }
 
 function drawPercentages() {
-    let data_p = [
-        ['fo',50,0,12,25,75,100,"sdcbjhsdc"],
-        ['fo',50,0,12,25,75,100,"sdcbjhsdc"],
-        ['fo',50,0,12,25,75,100,"sdcbjhsdc"],
-        ['fo',50,0,12,25,75,100,"sdcbjhsdc"],
-    ];
-
+    // TODO: Change tooltip; value - percentile
     let data = new google.visualization.DataTable();
 
     // Declare columns
@@ -127,17 +121,21 @@ function drawPercentages() {
     data.addColumn({ id: 'median', type: 'number', role: 'interval' });
     data.addColumn({ id: 'thirdQuartile', type: 'number', role: 'interval' });
     data.addColumn({ id: 'max', type: 'number', role: 'interval' });
-    data.addColumn({ type: 'string', role: 'tooltip' })
+    //data.addColumn({ type: 'string', role: 'tooltip' })
     // Add data.
-    data.addRows(data_p);
+    data.addRows(percentages_data);
     let options = {
         title: "Compare Adrienne Carney with the average student on the percentage of the indicators", //TODO: name change
         vAxis: {
             title: 'Percentage'
         },
         legend: { position: 'none' },
-        tooltip: { isHtml: true },
+        lineWidth: 0,
+        pointSize: 10,
+        colors: ['#a52714'],
+        pointShape: 'diamond',
         intervals: {
+            color:'grey',
             barWidth: 1,
             boxWidth: 1,
             lineWidth: 1,

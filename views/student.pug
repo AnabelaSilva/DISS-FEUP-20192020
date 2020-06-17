@@ -2,10 +2,8 @@ extends default
 
 block content
     script.
-    //- let histogram_data = !{JSON.stringify(histogram_data)};
-    //- let box_data = !{JSON.stringify(box_data)}
+        let percentages_data = !{JSON.stringify(percentages_data)};
     
-    //- div(id="histogram")
     div(id="percentages_plot")
 
     script(type="text/javascript" src="https://www.gstatic.com/charts/loader.js")

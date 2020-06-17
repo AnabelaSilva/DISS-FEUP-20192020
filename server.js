@@ -22,9 +22,11 @@ app.get('/', (req, res) => {
 
 app.get('/student', (req, res) => {
   let promises = [];
-  promises.push(queries.get_percentages(Number(req.query.id)));
+  let student_id = Number(req.query.id);
+  promises.push(queries.get_student(student_id));
+  promises.push(queries.get_percentages(student_id));
   Promise.all(promises).then((values) => {
-    res.render('student', { title: 'Mestrado em Tecnologias e Sistemas Informáticos Web'});
+    res.render('student', { title: 'Mestrado em Tecnologias e Sistemas Informáticos Web', percentages_data: values[1]});
   });
 });
 app.get('/reload', (req, res) => {
