@@ -74,7 +74,6 @@ function drawBoxAndWhiskers() {
         data.addColumn({ id: 'max', type: 'number', role: 'interval' });
         data.addColumn({ type: 'string', role: 'tooltip' })
     }
-    console.log(data_p);
     // Add data.
     data.addRows(data_p);
     let options = {
