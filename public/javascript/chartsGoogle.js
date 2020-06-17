@@ -1,5 +1,5 @@
 // Load the Visualization API and the corechart package.
-google.charts.load('current', { 'packages': ['corechart'] });
+google.charts.load('current', { 'packages': ['corechart', 'table'] });
 
 // Set a callback to run when the Google Visualization API is loaded.
 google.charts.setOnLoadCallback(drawALL);
@@ -7,6 +7,7 @@ function drawALL() {
     // drawHistogram();
     // drawBoxAndWhiskers();
     drawPercentages();
+    drawGradesTable();
 }
 
 function drawHistogram() {
@@ -135,7 +136,7 @@ function drawPercentages() {
         colors: ['#a52714'],
         pointShape: 'diamond',
         intervals: {
-            color:'grey',
+            color: 'grey',
             barWidth: 1,
             boxWidth: 1,
             lineWidth: 1,
@@ -154,4 +155,42 @@ function drawPercentages() {
     };
     let chart = new google.visualization.LineChart(document.getElementById('percentages_plot'));
     chart.draw(data, options);
+}
+
+function drawGradesTable() {
+    let data_p = [];
+    students_courses.forEach(element => {
+        let course = grades_data[element.course];
+        if (course != null) {
+            course.evals.forEach(element => {
+                if (element != null) {
+                    data_p.push([course.course, element.name, element.grade, element.percentile])
+                }
+            });
+        }
+    });
+    let data = new google.visualization.DataTable();
+    data.addColumn('string', 'Course');
+    data.addColumn('string', 'Evaluation');
+    data.addColumn('number', 'Grade');
+    data.addColumn('number', 'Percentile(of the evaluation)');
+    data.addRows(data_p);
+    let options = {
+        title: "Grades",
+    }
+
+    let formatter = new google.visualization.ColorFormat();
+    formatter.addGradientRange(0, .5, 'black','red', 'yellow');
+    formatter.addGradientRange(0.5, 1.01, 'black','yellow', 'green');
+    formatter.format(data, 3);
+
+    let formatter1 = new google.visualization.ColorFormat();
+    formatter1.addGradientRange(0, 75, 'black','red', 'yellow');
+    formatter1.addGradientRange(75, 101, 'black','yellow', 'green');
+    formatter1.format(data, 2);
+    let table = new google.visualization.Table(document.getElementById('grades_plot'));
+    
+
+    
+    table.draw(data, {allowHtml:true});
 }

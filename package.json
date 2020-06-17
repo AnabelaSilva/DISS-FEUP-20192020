@@ -16,6 +16,7 @@
     "fs": "0.0.1-security",
     "node-fetch": "^2.6.0",
     "papaparse": "^5.2.0",
+    "percentile-rank": "^1.0.1",
     "pug": "^2.0.3",
     "sqlite3": "^4.2.0"
   },

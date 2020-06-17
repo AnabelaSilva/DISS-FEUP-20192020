@@ -3,8 +3,11 @@ extends default
 block content
     script.
         let percentages_data = !{JSON.stringify(percentages_data)};
+        let grades_data = !{JSON.stringify(grades_data)};
+        let students_courses = !{JSON.stringify(students_courses)};
     
     div(id="percentages_plot")
+    div(id="grades_plot")
 
     script(type="text/javascript" src="https://www.gstatic.com/charts/loader.js")
     script(type="text/javascript" src="javascript/chartsGoogle.js")
