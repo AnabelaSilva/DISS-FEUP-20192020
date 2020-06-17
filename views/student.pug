@@ -1,24 +1,14 @@
 extends default
 
 block content
-    h1 #{rows[0].StudentName}
-    div.container
-        div.container
-            table(border='1')
-                tr
-                    th Course
-                    th Examination
-                    th Grade
-                each row in rows
-                    tr
-                        td #{row.CourseName}
-                        td #{row.EvaluationName}
-                        td #{row.value}
-        div.container
-            script(src='javascript/'+java +'.js')
-            script(src="https://cdn.jsdelivr.net/npm/chart.js@2.8.0")
-            canvas(id="myChart")
-            script.
-                let results = !{JSON.stringify(data)};
+    script.
+    //- let histogram_data = !{JSON.stringify(histogram_data)};
+    //- let box_data = !{JSON.stringify(box_data)}
+    
+    //- div(id="histogram")
+    div(id="percentages_plot")
+
+    script(type="text/javascript" src="https://www.gstatic.com/charts/loader.js")
+    script(type="text/javascript" src="javascript/chartsGoogle.js")
         
 

@@ -4,8 +4,9 @@ google.charts.load('current', { 'packages': ['corechart'] });
 // Set a callback to run when the Google Visualization API is loaded.
 google.charts.setOnLoadCallback(drawALL);
 function drawALL() {
-    drawHistogram();
-    drawBoxAndWhiskers();
+    // drawHistogram();
+    // drawBoxAndWhiskers();
+    drawPercentages();
 }
 
 function drawHistogram() {
@@ -38,17 +39,17 @@ function drawBoxAndWhiskers() {
     let data_p = [];
     let max_number_of_evals = 0;
     box_data.forEach(course => {
-        if (course != null){
+        if (course != null) {
             let course_row = [];
             course_row.push(course.course);
             let number_of_evals = 0;
             course.evals.forEach(element => {
                 if (element != null) {
                     number_of_evals++;
-                    course_row.push(100, element.min, element.Q1, element.median, element.Q3, element.max, element.name + ":\n\tMax: "+ element.max + "\n\tQ3: "+element.Q3+"\n\tMedian: "+element.median+"\n\tQ1: "+element.Q1+"\n\tMin: "+element.min);
+                    course_row.push(100, element.min, element.Q1, element.median, element.Q3, element.max, element.name + ":\n\tMax: " + element.max + "\n\tQ3: " + element.Q3 + "\n\tMedian: " + element.median + "\n\tQ1: " + element.Q1 + "\n\tMin: " + element.min);
                 }
             });
-            if(number_of_evals > max_number_of_evals){
+            if (number_of_evals > max_number_of_evals) {
                 max_number_of_evals = number_of_evals;
             }
             data_p.push(course_row);
@@ -57,7 +58,7 @@ function drawBoxAndWhiskers() {
 
     data_p.forEach(element => {
         while (element.length < 1 + max_number_of_evals * 7) {
-            element.push(undefined);   
+            element.push(undefined);
         }
     });
 
@@ -86,7 +87,7 @@ function drawBoxAndWhiskers() {
         // },
         legend: { position: 'none' },
         dataOpacity: 0,
-        tooltip: {isHtml: true},
+        tooltip: { isHtml: true },
         intervals: {
             barWidth: 1,
             boxWidth: 1,
@@ -105,5 +106,54 @@ function drawBoxAndWhiskers() {
         }
     };
     let chart = new google.visualization.ColumnChart(document.getElementById('box_plot'));
+    chart.draw(data, options);
+}
+
+function drawPercentages() {
+    let data_p = [
+        ['fo',50,0,12,25,75,100,"sdcbjhsdc"],
+        ['fo',50,0,12,25,75,100,"sdcbjhsdc"],
+        ['fo',50,0,12,25,75,100,"sdcbjhsdc"],
+        ['fo',50,0,12,25,75,100,"sdcbjhsdc"],
+    ];
+
+    let data = new google.visualization.DataTable();
+
+    // Declare columns
+    data.addColumn('string', 'Percentage');
+    data.addColumn('number', 'Value');
+    data.addColumn({ id: 'min', type: 'number', role: 'interval' });
+    data.addColumn({ id: 'firstQuartile', type: 'number', role: 'interval' });
+    data.addColumn({ id: 'median', type: 'number', role: 'interval' });
+    data.addColumn({ id: 'thirdQuartile', type: 'number', role: 'interval' });
+    data.addColumn({ id: 'max', type: 'number', role: 'interval' });
+    data.addColumn({ type: 'string', role: 'tooltip' })
+    // Add data.
+    data.addRows(data_p);
+    let options = {
+        title: "Compare Adrienne Carney with the average student on the percentage of the indicators", //TODO: name change
+        vAxis: {
+            title: 'Percentage'
+        },
+        legend: { position: 'none' },
+        tooltip: { isHtml: true },
+        intervals: {
+            barWidth: 1,
+            boxWidth: 1,
+            lineWidth: 1,
+            style: 'boxes'
+        },
+        interval: {
+            max: {
+                style: 'bars',
+                fillOpacity: 1,
+            },
+            min: {
+                style: 'bars',
+                fillOpacity: 1,
+            }
+        }
+    };
+    let chart = new google.visualization.LineChart(document.getElementById('percentages_plot'));
     chart.draw(data, options);
 }
