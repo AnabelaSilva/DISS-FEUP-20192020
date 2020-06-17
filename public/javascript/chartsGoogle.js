@@ -162,9 +162,12 @@ function drawGradesTable() {
     students_courses.forEach(element => {
         let course = grades_data[element.course];
         if (course != null) {
+            if(course.evals.length == 0) {
+                data_p.push([course.course, null, null, null]);
+            }
             course.evals.forEach(element => {
                 if (element != null) {
-                    data_p.push([course.course, element.name, element.grade, element.percentile])
+                    data_p.push([course.course, element.name, element.grade, element.percentile]);
                 }
             });
         }
