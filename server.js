@@ -19,7 +19,6 @@ app.get('/', (req, res) => {
   });
 
 });
-
 app.get('/student', (req, res) => {
   let promises = [];
   let student_id = Number(req.query.id);
