@@ -30,7 +30,7 @@ app.get('/student', (req, res) => {
   promises.push(queries.get_activities_in_time(student_id));
   promises.push(queries.get_indicators(student_id));
   Promise.all(promises).then((values) => {
-    res.render('student', { title: 'Mestrado em Tecnologias e Sistemas Informáticos Web', percentages_data: values[1], grades_data: values[2], students_courses: values[3], weekly_activities: values[4], indicators: values[5]});
+    res.render('student', { title: 'Mestrado em Tecnologias e Sistemas Informáticos Web', student: values[0],percentages_data: values[1], grades_data: values[2], students_courses: values[3], weekly_activities: values[4], indicators: values[5]});
   });
 });
 app.get('/reload', (req, res) => {

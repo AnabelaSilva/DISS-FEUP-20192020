@@ -1,3 +1,5 @@
+const height = 250;
+const width = 500;
 // Load the Visualization API and the corechart package.
 google.charts.load('current', { 'packages': ['corechart', 'table'] });
 
@@ -105,7 +107,9 @@ function drawBoxAndWhiskers() {
 }
 
 function drawPercentages() {
-    // TODO: Change tooltip; value - percentile
+    percentages_data.forEach(element => {
+        element[7] = student.name + " -> " + element[1].toFixed(2) + "%\n They are on the " + element[7].toFixed(2) + " percentile";
+    });
     let data = new google.visualization.DataTable();
 
     // Declare columns
@@ -116,21 +120,24 @@ function drawPercentages() {
     data.addColumn({ id: 'median', type: 'number', role: 'interval' });
     data.addColumn({ id: 'thirdQuartile', type: 'number', role: 'interval' });
     data.addColumn({ id: 'max', type: 'number', role: 'interval' });
-    //data.addColumn({ type: 'string', role: 'tooltip' })
+    data.addColumn({ type: 'string', role: 'tooltip' })
     // Add data.
     data.addRows(percentages_data);
     let options = {
-        title: "Compare Adrienne Carney with the average student on the percentage of the indicators", //TODO: name change
+        title: "Compare " + student.name + " with the average student on the percentage of the indicators",
         vAxis: {
             title: 'Percentage'
         },
+        height: height,
+        width: width,
+        tooltip: { isHtml: true },
         legend: { position: 'none' },
         lineWidth: 0,
         pointSize: 10,
-        colors: ['#a52714'],
+        colors: ['blue'],
         pointShape: 'diamond',
         intervals: {
-            color: 'grey',
+            color: 'red',
             barWidth: 1,
             boxWidth: 1,
             lineWidth: 1,
@@ -170,10 +177,29 @@ function drawGradesTable() {
     data.addColumn('string', 'Course');
     data.addColumn('string', 'Evaluation');
     data.addColumn('number', 'Grade');
-    data.addColumn('number', 'Percentile(of the evaluation)');
+    data.addColumn('number', 'Percentile');
     data.addRows(data_p);
+
+    let colors = ['#3366cc ', '#dc3912 ', '#ff9900 ', '#109618 ', '#990099 ', '#0099c6 ', '#dd4477 ', '#66aa00 ', '#b82e2e ', '#316395 ', '#994499 ', '#22aa99 ', '#aaaa11 ', '#6633cc ', '#e67300 ', '#8b0707 ', '#651067 ', '#329262 ', '#5574a6 ', '#3b3eac ', '#b77322 ', '#16d620 ', '#b91383 ', '#f4359e ', '#9c5935 ', '#a9c413 ', '#2a778d ', '#668d1c ', '#bea413 ', '#0c5922 ', '#743411'];
+    let color_id = -1;
+    let course_name = "";
+    for (let index = 0; index < data_p.length; index++) {
+        if(course_name != data_p[index][0]){
+            color_id = (color_id+1)% colors.length;
+            course_name = data_p[index][0];
+        }
+        data.setProperty(index, 0, 'style', 'background-color: ' + colors[color_id] + ';');
+        data.setProperty(index, 1, 'style', 'background-color: ' + colors[color_id] + ';');
+        data.setProperty(index, 2, 'style', 'background-color: ' + colors[color_id] + ';');
+        data.setProperty(index, 3, 'style', 'background-color: ' + colors[color_id] + ';');
+    }
+
     let options = {
         title: "Grades",
+        height: height,
+        width: width,
+        alternatingRowStyle: false,
+        allowHtml: true
     }
 
     let formatter = new google.visualization.ColorFormat();
@@ -186,28 +212,35 @@ function drawGradesTable() {
     formatter1.addGradientRange(75, 101, 'black', 'yellow', 'green');
     formatter1.format(data, 2);
     let table = new google.visualization.Table(document.getElementById('grades_plot'));
-
-
-
-    table.draw(data, { allowHtml: true });
+    table.draw(data, options);
 }
 
 function drawWeekly() {
     let data_p = [];
     weekly_activities.forEach(element => {
-        data_p.push([element.week, element.student, element.average, element.median]);
+        data_p.push([element.week, element.student, element.average]);
     });
 
     let data = new google.visualization.DataTable();
     // Declare columns
     data.addColumn('number', 'Week');
-    data.addColumn('number', 'Student');
-    data.addColumn('number', 'Average');
-    data.addColumn('number', 'Median');
+    data.addColumn('number', student.name);
+    data.addColumn('number', 'Average Student');
     // Add data.
     data.addRows(data_p);
     let options = {
-        title: "Number of activities(posts, quizzes attempst and submissions) per week",
+        title: "Number of activities(posts, quizzes attempst and submissions) per week per course",
+        vAxis: {
+            title: 'Number of activities'
+        },
+        height: height,
+        width: width,
+        hAxis: {
+            title: 'Week of the semester'
+        },
+        legend: {
+            position: 'top'
+        }
     };
     let chart = new google.visualization.LineChart(document.getElementById('week_plot'));
     chart.draw(data, options);
@@ -215,18 +248,24 @@ function drawWeekly() {
 
 function drawIndicators() {
     var data = new google.visualization.DataTable();
-      data.addColumn('string', 'Indicator');
-      data.addColumn('number', 'Student');
-      data.addColumn('number', 'Average');
+    data.addColumn('string', 'Indicator');
+    data.addColumn('number', student.name);
+    data.addColumn('number', 'Average Student');
 
-      data.addRows(indicators);
+    data.addRows(indicators);
 
-      var options = {
-        title: 'Compare Adrienne Carney with the average of students on', // TODO: change name
-      };
+    var options = {
+        title: 'Compare ' + student.name + ' with the average of students on the indicators',
+        legend: {
+            position: 'top'
+        },
+        height: height,
+        width: width,
+        focusTarget: 'category'
+    };
 
-      var chart = new google.visualization.ColumnChart(
+    var chart = new google.visualization.ColumnChart(
         document.getElementById('indicators_plot'));
 
-      chart.draw(data, options);
+    chart.draw(data, options);
 }

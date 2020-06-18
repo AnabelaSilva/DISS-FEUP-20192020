@@ -108,6 +108,7 @@ function get_percentages(student_id) {
           res[index].push(d3.quantile(element, 0.5));
           res[index].push(d3.quantile(element, 0.75));
           res[index].push(d3.quantile(element, 1));
+          res[index].push(percentRank(element, res[index][1]));
         }
         resolve(res);
       }
@@ -149,7 +150,6 @@ function get_courses(student_id) {
   });
   return promise;
 }
-
 function get_activities_in_time(student_id) {
   let sql = queries_sql.get_activities_in_time;
   let params = [];
