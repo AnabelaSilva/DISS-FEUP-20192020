@@ -23,7 +23,6 @@ function get_activities_from_all_students() {
   });
   return promise;
 }
-
 function get_evaluations(student_id) {
   let sql = queries_sql.grades;
   let params = [];
@@ -60,7 +59,7 @@ function get_evaluations(student_id) {
             element.median = d3.quantile(element.data, 0.5);
             element.Q3 = d3.quantile(element.data, 0.75);
             element.max = d3.quantile(element.data, 1);
-            if(element.grade != null){
+            if (element.grade != null) {
               element.percentile = percentRank(element.data, element.grade);
             }
           });
@@ -71,7 +70,6 @@ function get_evaluations(student_id) {
   });
   return promise;
 }
-
 function get_percentages(student_id) {
   let sql = queries_sql.percentage_student_view;
   let params = [];
@@ -152,15 +150,48 @@ function get_courses(student_id) {
   return promise;
 }
 
+function get_activities_in_time(student_id) {
+  let sql = queries_sql.get_activities_in_time;
+  let params = [];
+  let promise = new Promise((resolve, reject) => {
+    db.all(sql, params,
+      function (err, rows) {
+        if (err) {
+          console.error(err);
+          console.trace();
+          return err;
+        }
+        let aux = []
+        rows.forEach(element => {
+          if (aux[element.week] == undefined) {
+            aux[element.week] = { week: element.week, activities: [] };
+          }
+          aux[element.week].activities.push(element.activities / element.courses);
+          if (student_id == element.student) {
+            aux[element.week].student = element.activities / element.courses;
+          }
+        });
+        aux.forEach(element => {
+          element.average = d3.mean(element.activities);
+        });
+        resolve(aux);
+      }
+    );
+  });
+  return promise;
+}
+
 module.exports = {
   get_activities_from_all_students: get_activities_from_all_students,
   get_evaluations: get_evaluations,
   get_percentages: get_percentages,
   get_student: get_student,
-  get_courses:get_courses
+  get_courses: get_courses,
+  get_activities_in_time: get_activities_in_time
 };
 
 let queries_sql = {
+  get_activities_in_time: "SELECT number AS week, count(created) AS activities, count(DISTINCT course) AS courses, STUDENT_IN_COURSE.student AS student FROM WEEK JOIN STUDENT_IN_COURSE LEFT JOIN ( SELECT created, student FROM STUDENT JOIN POST ON (POST.student = STUDENT.id) UNION ALL SELECT start, student FROM STUDENT JOIN ATTEMPT ON (ATTEMPT.student = STUDENT.id) UNION ALL SELECT created, student FROM STUDENT JOIN SUBMISSION ON (SUBMISSION.student = STUDENT.id) ) AS tab1 ON (tab1.student = STUDENT_IN_COURSE.student AND number = ( (created - 1605830400) / 604800) ) GROUP BY number, STUDENT_IN_COURSE.student;",
   get_student: "SELECT * FROM STUDENT WHERE id = ?;",
   get_courses: "SELECT * FROM STUDENT_IN_COURSE WHERE student = ?;",
   percentage_of_activities_per_opportunities: "SELECT student, f + q + ag AS opportunities, p + at + s AS participation FROM ( SELECT STUDENT_IN_COURSE.student, count(DISTINCT FORUM.id) AS f, count(DISTINCT POST.forum) AS p FROM STUDENT_IN_COURSE JOIN FORUM USING ( course ) LEFT JOIN POST ON (FORUM.id = POST.forum AND POST.student = STUDENT_IN_COURSE.student) GROUP BY STUDENT_IN_COURSE.student ) AS tab1 JOIN ( SELECT STUDENT_IN_COURSE.student, count(DISTINCT QUIZ.id) AS q, count(DISTINCT ATTEMPT.quiz) AS at FROM STUDENT_IN_COURSE JOIN QUIZ USING ( course ) LEFT JOIN ATTEMPT ON (QUIZ.id = ATTEMPT.quiz AND ATTEMPT.student = STUDENT_IN_COURSE.student) GROUP BY STUDENT_IN_COURSE.student ) AS tab2 USING ( student ) JOIN ( SELECT STUDENT_IN_COURSE.student, count(DISTINCT ASSIGN.id) AS ag, count(DISTINCT SUBMISSION.assign) AS s FROM STUDENT_IN_COURSE JOIN ASSIGN USING ( course ) LEFT JOIN SUBMISSION ON (ASSIGN.id = SUBMISSION.assign AND SUBMISSION.student = STUDENT_IN_COURSE.student) GROUP BY STUDENT_IN_COURSE.student ) AS tab3 USING ( student );",

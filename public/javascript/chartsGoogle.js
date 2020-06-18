@@ -3,12 +3,6 @@ google.charts.load('current', { 'packages': ['corechart', 'table'] });
 
 // Set a callback to run when the Google Visualization API is loaded.
 google.charts.setOnLoadCallback(drawALL);
-function drawALL() {
-    // drawHistogram();
-    // drawBoxAndWhiskers();
-    drawPercentages();
-    drawGradesTable();
-}
 
 function drawHistogram() {
     let data = new google.visualization.DataTable();

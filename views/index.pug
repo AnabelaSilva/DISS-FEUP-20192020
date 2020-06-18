@@ -4,6 +4,10 @@ block content
     script.
         let histogram_data = !{JSON.stringify(histogram_data)};
         let box_data = !{JSON.stringify(box_data)}
+        function drawALL() {
+            drawHistogram();
+            drawBoxAndWhiskers();
+        }
     
     div(id="histogram")
     div(id="box_plot")
