@@ -156,7 +156,7 @@ function drawGradesTable() {
     students_courses.forEach(element => {
         let course = grades_data[element.course];
         if (course != null) {
-            if(course.evals.length == 0) {
+            if (course.evals.length == 0) {
                 data_p.push([course.course, null, null, null]);
             }
             course.evals.forEach(element => {
@@ -177,17 +177,56 @@ function drawGradesTable() {
     }
 
     let formatter = new google.visualization.ColorFormat();
-    formatter.addGradientRange(0, .5, 'black','red', 'yellow');
-    formatter.addGradientRange(0.5, 1.01, 'black','yellow', 'green');
+    formatter.addGradientRange(0, .5, 'black', 'red', 'yellow');
+    formatter.addGradientRange(0.5, 1.01, 'black', 'yellow', 'green');
     formatter.format(data, 3);
 
     let formatter1 = new google.visualization.ColorFormat();
-    formatter1.addGradientRange(0, 75, 'black','red', 'yellow');
-    formatter1.addGradientRange(75, 101, 'black','yellow', 'green');
+    formatter1.addGradientRange(0, 75, 'black', 'red', 'yellow');
+    formatter1.addGradientRange(75, 101, 'black', 'yellow', 'green');
     formatter1.format(data, 2);
     let table = new google.visualization.Table(document.getElementById('grades_plot'));
-    
 
-    
-    table.draw(data, {allowHtml:true});
+
+
+    table.draw(data, { allowHtml: true });
+}
+
+function drawWeekly() {
+    let data_p = [];
+    weekly_activities.forEach(element => {
+        data_p.push([element.week, element.student, element.average, element.median]);
+    });
+
+    let data = new google.visualization.DataTable();
+    // Declare columns
+    data.addColumn('number', 'Week');
+    data.addColumn('number', 'Student');
+    data.addColumn('number', 'Average');
+    data.addColumn('number', 'Median');
+    // Add data.
+    data.addRows(data_p);
+    let options = {
+        title: "Number of activities(posts, quizzes attempst and submissions) per week",
+    };
+    let chart = new google.visualization.LineChart(document.getElementById('week_plot'));
+    chart.draw(data, options);
+}
+
+function drawIndicators() {
+    var data = new google.visualization.DataTable();
+      data.addColumn('string', 'Indicator');
+      data.addColumn('number', 'Student');
+      data.addColumn('number', 'Average');
+
+      data.addRows(indicators);
+
+      var options = {
+        title: 'Compare Adrienne Carney with the average of students on', // TODO: change name
+      };
+
+      var chart = new google.visualization.ColumnChart(
+        document.getElementById('indicators_plot'));
+
+      chart.draw(data, options);
 }

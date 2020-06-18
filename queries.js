@@ -173,8 +173,43 @@ function get_activities_in_time(student_id) {
         });
         aux.forEach(element => {
           element.average = d3.mean(element.activities);
+          element.median = d3.median(element.activities);
         });
         resolve(aux);
+      }
+    );
+  });
+  return promise;
+}
+function get_indicators(student_id) {
+  let sql = queries_sql.get_indicators;
+  let params = [];
+  let promise = new Promise((resolve, reject) => {
+    db.all(sql, params,
+      function (err, rows) {
+        if (err) {
+          console.error(err);
+          console.trace();
+          return err;
+        }
+        let res = [
+          ['Attempts per quiz'],
+          ['Posts per forum']
+        ];
+        let aux = [[], []];
+        rows.forEach(element => {
+          aux[0].push(element.attempts / element.unlimited_quizzes);
+          aux[1].push(element.posts / element.forums);
+          if (element.student == student_id) {
+            res[0].push(element.attempts / element.unlimited_quizzes);
+            res[1].push(element.posts / element.forums);
+          }
+        });
+        for (let index = 0; index < aux.length; index++) {
+          const element = aux[index];
+          res[index].push(d3.mean(element));
+        }
+        resolve(res);
       }
     );
   });
@@ -187,10 +222,12 @@ module.exports = {
   get_percentages: get_percentages,
   get_student: get_student,
   get_courses: get_courses,
-  get_activities_in_time: get_activities_in_time
+  get_activities_in_time: get_activities_in_time,
+  get_indicators: get_indicators
 };
 
 let queries_sql = {
+  get_indicators: "SELECT student, unlimited_quizzes, attempts, forums, posts FROM( SELECT STUDENT_IN_COURSE.student AS student, count(DISTINCT QUIZ.id) AS unlimited_quizzes, count(ATTEMPT.quiz) AS attempts FROM STUDENT_IN_COURSE JOIN QUIZ USING ( course ) LEFT JOIN ATTEMPT ON (QUIZ.id = ATTEMPT.quiz AND ATTEMPT.student = STUDENT_IN_COURSE.student) WHERE QUIZ.attempts_permitted IS NULL GROUP BY STUDENT_IN_COURSE.student) AS tab1 JOIN( SELECT STUDENT_IN_COURSE.student AS student, count(DISTINCT FORUM.id) AS forums, count(POST.forum) AS posts FROM STUDENT_IN_COURSE JOIN FORUM USING ( course ) LEFT JOIN POST ON (FORUM.id = POST.forum AND POST.student = STUDENT_IN_COURSE.student) GROUP BY STUDENT_IN_COURSE.student) AS tab2 USING (student);",
   get_activities_in_time: "SELECT number AS week, count(created) AS activities, count(DISTINCT course) AS courses, STUDENT_IN_COURSE.student AS student FROM WEEK JOIN STUDENT_IN_COURSE LEFT JOIN ( SELECT created, student FROM STUDENT JOIN POST ON (POST.student = STUDENT.id) UNION ALL SELECT start, student FROM STUDENT JOIN ATTEMPT ON (ATTEMPT.student = STUDENT.id) UNION ALL SELECT created, student FROM STUDENT JOIN SUBMISSION ON (SUBMISSION.student = STUDENT.id) ) AS tab1 ON (tab1.student = STUDENT_IN_COURSE.student AND number = ( (created - 1605830400) / 604800) ) GROUP BY number, STUDENT_IN_COURSE.student;",
   get_student: "SELECT * FROM STUDENT WHERE id = ?;",
   get_courses: "SELECT * FROM STUDENT_IN_COURSE WHERE student = ?;",
