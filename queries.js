@@ -23,6 +23,40 @@ function get_activities_from_all_students() {
   });
   return promise;
 }
+function get_activities_from_courses() {
+  let sql = queries_sql.get_activities_from_courses;
+  let params = [];
+  let promise = new Promise((resolve, reject) => {
+    db.all(sql, params,
+      function (err, rows) {
+        if (err) {
+          console.error(err);
+          console.trace();
+          return err;
+        }
+        let res = [
+          ['Participated Forums'],
+          ['Attempted Quizzes'],
+          ['Submitted Assignments'],
+          ['OnTime Submissions']
+        ];
+        let courses = [];
+        rows.forEach(element => {
+          if (courses[element.course] == null) {
+            courses[element.course] = { name: element.course, forums: { data: [] }, quizzes: { data: [] }, assigns: { data: [] }, ontime: { data: [] } }
+          }
+          courses[element.course].forums.data.push(100 * element.post / element.forum);
+          courses[element.course].quizzes.data.push(100 * element.attempt / element.quiz);
+          courses[element.course].assigns.data.push(100 * element.submission / element.assigns);
+          courses[element.course].ontime.data.push(100 * element.post / element.forum);
+        });
+        console.log(courses);
+        resolve(aux);
+      }
+    );
+  });
+  return promise;
+}
 function get_lastAccess() {
   let sql = queries_sql.get_lastAccess;
   let params = [];
@@ -245,6 +279,7 @@ function get_indicators(student_id) {
 
 module.exports = {
   get_activities_from_all_students: get_activities_from_all_students,
+  get_activities_from_courses: get_activities_from_courses,
   get_evaluations: get_evaluations,
   get_percentages: get_percentages,
   get_student: get_student,
@@ -255,6 +290,7 @@ module.exports = {
 };
 
 let queries_sql = {
+ get_activities_from_courses: "SELECT student, course, forum, post, attempt, quiz, submission, assign, ontime FROM ( SELECT STUDENT_IN_COURSE.student, course, count(DISTINCT POST.forum) AS post, count(DISTINCT FORUM.id) AS forum FROM STUDENT_IN_COURSE LEFT JOIN FORUM USING ( course ) LEFT JOIN POST ON (STUDENT_IN_COURSE.student = POST.student AND FORUM.id = POST.forum) GROUP BY course, STUDENT_IN_COURSE.student ) AS tab1 JOIN ( SELECT STUDENT_IN_COURSE.student, course, count(DISTINCT ATTEMPT.quiz) AS attempt, count(DISTINCT QUIZ.id) AS quiz FROM STUDENT_IN_COURSE LEFT JOIN QUIZ USING ( course ) LEFT JOIN ATTEMPT ON (STUDENT_IN_COURSE.student = ATTEMPT.student AND QUIZ.id = ATTEMPT.quiz) GROUP BY course, STUDENT_IN_COURSE.student ) AS tab2 USING ( student, course ) JOIN ( SELECT STUDENT_IN_COURSE.student, course, count(DISTINCT SUBMISSION.assign) AS submission, count(DISTINCT ASSIGN.id) AS assign FROM STUDENT_IN_COURSE LEFT JOIN ASSIGN USING ( course ) LEFT JOIN SUBMISSION ON (STUDENT_IN_COURSE.student = SUBMISSION.student AND ASSIGN.id = SUBMISSION.assign) GROUP BY course, STUDENT_IN_COURSE.student ) AS tab3 USING ( student, course ) JOIN ( SELECT STUDENT_IN_COURSE.student, course, count(DISTINCT SUBMISSION.assign) AS ontime, count(DISTINCT ASSIGN.id) AS assign_ FROM STUDENT_IN_COURSE LEFT JOIN ASSIGN USING ( course ) LEFT JOIN SUBMISSION ON (STUDENT_IN_COURSE.student = SUBMISSION.student AND ASSIGN.id = SUBMISSION.assign AND SUBMISSION.created <= ASSIGN.due_date) GROUP BY course, STUDENT_IN_COURSE.student ) AS tab4 USING ( student, course );",
   get_indicators: "SELECT student, unlimited_quizzes, attempts, forums, posts FROM( SELECT STUDENT_IN_COURSE.student AS student, count(DISTINCT QUIZ.id) AS unlimited_quizzes, count(ATTEMPT.quiz) AS attempts FROM STUDENT_IN_COURSE JOIN QUIZ USING ( course ) LEFT JOIN ATTEMPT ON (QUIZ.id = ATTEMPT.quiz AND ATTEMPT.student = STUDENT_IN_COURSE.student) WHERE QUIZ.attempts_permitted IS NULL GROUP BY STUDENT_IN_COURSE.student) AS tab1 JOIN( SELECT STUDENT_IN_COURSE.student AS student, count(DISTINCT FORUM.id) AS forums, count(POST.forum) AS posts FROM STUDENT_IN_COURSE JOIN FORUM USING ( course ) LEFT JOIN POST ON (FORUM.id = POST.forum AND POST.student = STUDENT_IN_COURSE.student) GROUP BY STUDENT_IN_COURSE.student) AS tab2 USING (student);",
   get_activities_in_time: "SELECT number AS week, count(created) AS activities, count(DISTINCT course) AS courses, STUDENT_IN_COURSE.student AS student FROM WEEK JOIN STUDENT_IN_COURSE LEFT JOIN ( SELECT created, student FROM STUDENT JOIN POST ON (POST.student = STUDENT.id) UNION ALL SELECT start, student FROM STUDENT JOIN ATTEMPT ON (ATTEMPT.student = STUDENT.id) UNION ALL SELECT created, student FROM STUDENT JOIN SUBMISSION ON (SUBMISSION.student = STUDENT.id) ) AS tab1 ON (tab1.student = STUDENT_IN_COURSE.student AND number = ( (created - 1605830400) / 604800) ) GROUP BY number, STUDENT_IN_COURSE.student;",
   get_student: "SELECT * FROM STUDENT WHERE id = ?;",
