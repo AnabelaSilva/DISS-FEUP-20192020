@@ -23,6 +23,8 @@ function drawHistogram() {
             viewWindowMode: 'maximized',
             viewWindow: { max: 100 }
         },
+        height: height,
+        width: width,
         vAxis: {
             title: 'Number of students'
         }
@@ -79,6 +81,8 @@ function drawBoxAndWhiskers() {
         vAxis: {
             title: 'Grades'
         },
+        height: height,
+        width: width,
         // hAxis: {
         //     title: 'Courses',
         // },
@@ -158,6 +162,32 @@ function drawPercentages() {
     chart.draw(data, options);
 }
 
+function drawLastDays() {
+    let data_p = last_access;
+    let data = new google.visualization.DataTable();
+    data.addColumn('string', 'Student');
+    data.addColumn('number', 'Days since last access');
+    data.addColumn('number', 'Mean number of activities per week per course enrolloed');
+    data.addRows(data_p);
+
+    let options = {
+        alternatingRowStyle: false,
+        allowHtml: true,
+        height: height,
+        width: width,
+        cssClassNames: {headerCell: 'googleHeaderCell'}
+    }
+
+    let formatter = new google.visualization.ColorFormat();
+    formatter.addGradientRange(0, 7, 'black', 'green', 'yellow');
+    formatter.addGradientRange(7, 15, 'black', 'yellow', 'red');
+     formatter.addRange(null, null, 'black', 'red');
+     formatter.format(data, 1);
+
+    let table = new google.visualization.Table(document.getElementById('lastaccess_plot'));
+    table.draw(data, options);
+}
+
 function drawGradesTable() {
     let data_p = [];
     students_courses.forEach(element => {
@@ -199,7 +229,8 @@ function drawGradesTable() {
         height: height,
         width: width,
         alternatingRowStyle: false,
-        allowHtml: true
+        allowHtml: true,
+        cssClassNames: {headerCell: 'googleHeaderCell'}
     }
 
     let formatter = new google.visualization.ColorFormat();

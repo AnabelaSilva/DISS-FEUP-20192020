@@ -21,3 +21,7 @@ main {
   display: flex;
   flex-direction: column;
 }
+.googleHeaderCell {
+  text-align: center;
+  background-color: lightgrey;
+}

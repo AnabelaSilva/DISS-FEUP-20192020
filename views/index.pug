@@ -4,13 +4,18 @@ block content
     script.
         let histogram_data = !{JSON.stringify(histogram_data)};
         let box_data = !{JSON.stringify(box_data)}
+        let last_access = !{JSON.stringify(last_access)}
         function drawALL() {
             drawHistogram();
             drawBoxAndWhiskers();
+            drawLastDays();
         }
-    
-    div(id="histogram")
-    div(id="box_plot")
 
+    div(class="content")
+        div(class="grid-container")
+            div(id="histogram")
+            div(id="box_plot")
+            div(id="lastaccess_plot")
+   
     script(type="text/javascript" src="https://www.gstatic.com/charts/loader.js")
     script(type="text/javascript" src="javascript/chartsGoogle.js")
