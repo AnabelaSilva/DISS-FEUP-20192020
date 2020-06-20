@@ -1,5 +1,6 @@
-const height = 250;
-const width = 500;
+const height = 275;
+const width = 550;
+
 // Load the Visualization API and the corechart package.
 google.charts.load('current', { 'packages': ['corechart', 'table'] });
 
@@ -10,11 +11,17 @@ function drawHistogram() {
     let data = new google.visualization.DataTable();
 
     // Declare columns
-    data.addColumn('string', 'Student');
+    
+    
+    data.addColumn({ id: 'Student', type: 'string'});
     data.addColumn('number', 'Percentage of participation');
-
+    
+    let aux = [];
+    histogram_data.forEach(element => {
+        aux.push([element[0],element[1]]);
+    });
     // Add data.
-    data.addRows(histogram_data);
+    data.addRows(aux);
     var options = {
         title: 'Distribution of the students by the percentage of participated activities',
         legend: { position: 'none' },
@@ -23,6 +30,7 @@ function drawHistogram() {
             viewWindowMode: 'maximized',
             viewWindow: { max: 100 }
         },
+        allowHtml: true,
         height: height,
         width: width,
         vAxis: {
@@ -31,9 +39,19 @@ function drawHistogram() {
     };
 
     let chart = new google.visualization.Histogram(document.getElementById('histogram'));
+
+    // The select handler. Call the chart's getSelection() method
+    function selectHandler() {
+       var selectedItem = chart.getSelection()[0];
+        if (selectedItem) {
+            window.location.href = "/student?id="+histogram_data[selectedItem.row][2];
+        }
+    }
+
+    google.visualization.events.addListener(chart, 'select', selectHandler);
+
     chart.draw(data, options);
 }
-
 function drawBoxAndWhiskers() {
     let data_p = [];
     let max_number_of_evals = 0;
@@ -109,7 +127,6 @@ function drawBoxAndWhiskers() {
     let chart = new google.visualization.ColumnChart(document.getElementById('box_plot'));
     chart.draw(data, options);
 }
-
 function drawCoursesDisplay() {
     let data = new google.visualization.DataTable();
     let res = [
@@ -117,7 +134,7 @@ function drawCoursesDisplay() {
         ['Attempted Quizzes'],
         ['Submitted Assignments'],
         ['OnTime Submissions']
-      ];
+    ];
     // Declare columns
     data.addColumn('string', 'Indicator');
     participation_by_course.forEach(element => {
@@ -221,10 +238,10 @@ function drawPercentages() {
     let chart = new google.visualization.LineChart(document.getElementById('percentages_plot'));
     chart.draw(data, options);
 }
-
 function drawLastDays() {
     let data_p = last_access;
     let data = new google.visualization.DataTable();
+    data.addColumn('number', 'ID');
     data.addColumn('string', 'Student');
     data.addColumn('number', 'Days since last access');
     data.addColumn('number', 'Mean number of activities per week per course enrolloed');
@@ -242,12 +259,23 @@ function drawLastDays() {
     formatter.addGradientRange(0, 7, 'black', 'green', 'yellow');
     formatter.addGradientRange(7, 15, 'black', 'yellow', 'red');
     formatter.addRange(null, null, 'black', 'red');
-    formatter.format(data, 1);
+    formatter.format(data, 2);
 
     let table = new google.visualization.Table(document.getElementById('lastaccess_plot'));
+
+    // The select handler. Call the chart's getSelection() method
+    function selectHandler() {
+        var selectedItem = table.getSelection()[0];
+         if (selectedItem) {
+            var value = data.getValue(selectedItem.row, 0);
+             window.location.href = "/student?id="+value;
+         }
+     }
+ 
+    google.visualization.events.addListener(table, 'select', selectHandler);
+
     table.draw(data, options);
 }
-
 function drawGradesTable() {
     let data_p = [];
     students_courses.forEach(element => {
@@ -305,7 +333,6 @@ function drawGradesTable() {
     let table = new google.visualization.Table(document.getElementById('grades_plot'));
     table.draw(data, options);
 }
-
 function drawWeekly() {
     let data_p = [];
     weekly_activities.forEach(element => {
@@ -336,7 +363,6 @@ function drawWeekly() {
     let chart = new google.visualization.LineChart(document.getElementById('week_plot'));
     chart.draw(data, options);
 }
-
 function drawIndicators() {
     var data = new google.visualization.DataTable();
     data.addColumn('string', 'Indicator');
