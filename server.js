@@ -17,7 +17,7 @@ app.get('/', (req, res) => {
   promises.push(queries.get_lastAccess());
   promises.push(queries.get_activities_from_courses());
   Promise.all(promises).then((values) => {
-    res.render('index', { title: 'Mestrado em Tecnologias e Sistemas Informáticos Web', histogram_data: values[0], box_data: values[1], last_access: values[2] });
+    res.render('index', { title: 'Mestrado em Tecnologias e Sistemas Informáticos Web', histogram_data: values[0], box_data: values[1], last_access: values[2], participation_by_course: values[3] });
   });
 
 });

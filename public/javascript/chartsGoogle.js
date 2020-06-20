@@ -110,6 +110,66 @@ function drawBoxAndWhiskers() {
     chart.draw(data, options);
 }
 
+function drawCoursesDisplay() {
+    let data = new google.visualization.DataTable();
+    let res = [
+        ['Participated Forums'],
+        ['Attempted Quizzes'],
+        ['Submitted Assignments'],
+        ['OnTime Submissions']
+      ];
+    // Declare columns
+    data.addColumn('string', 'Indicator');
+    participation_by_course.forEach(element => {
+        data.addColumn('number', element.name);
+        data.addColumn({ id: 'min', type: 'number', role: 'interval' });
+        data.addColumn({ id: 'firstQuartile', type: 'number', role: 'interval' });
+        data.addColumn({ id: 'median', type: 'number', role: 'interval' });
+        data.addColumn({ id: 'thirdQuartile', type: 'number', role: 'interval' });
+        data.addColumn({ id: 'max', type: 'number', role: 'interval' });
+    });
+    participation_by_course.forEach(element => {
+        res[0] = res[0].concat(element.forums.values);
+        res[1] = res[1].concat(element.quizzes.values);
+        res[2] = res[2].concat(element.assigns.values);
+        res[3] = res[3].concat(element.ontime.values);
+    });
+    console.log(res);
+    // Add data.
+    data.addRows(res);
+    let options = {
+        title: "Compare the courses by the percentages of participation",
+        vAxis: {
+            title: 'Percentages'
+        },
+        height: height,
+        width: width,
+        hAxis: {
+            title: 'Indicators',
+        },
+        legend: { position: 'rigth' },
+        dataOpacity: 0,
+        tooltip: { isHtml: true },
+        intervals: {
+            barWidth: 1,
+            boxWidth: 1,
+            lineWidth: 1,
+            style: 'boxes'
+        },
+        interval: {
+            max: {
+                style: 'bars',
+                fillOpacity: 1,
+            },
+            min: {
+                style: 'bars',
+                fillOpacity: 1,
+            }
+        }
+    };
+    let chart = new google.visualization.ColumnChart(document.getElementById('courses_plot'));
+    chart.draw(data, options);
+}
 function drawPercentages() {
     percentages_data.forEach(element => {
         element[7] = student.name + " -> " + element[1].toFixed(2) + "%\n They are on the " + element[7].toFixed(2) + " percentile";
@@ -175,14 +235,14 @@ function drawLastDays() {
         allowHtml: true,
         height: height,
         width: width,
-        cssClassNames: {headerCell: 'googleHeaderCell'}
+        cssClassNames: { headerCell: 'googleHeaderCell' }
     }
 
     let formatter = new google.visualization.ColorFormat();
     formatter.addGradientRange(0, 7, 'black', 'green', 'yellow');
     formatter.addGradientRange(7, 15, 'black', 'yellow', 'red');
-     formatter.addRange(null, null, 'black', 'red');
-     formatter.format(data, 1);
+    formatter.addRange(null, null, 'black', 'red');
+    formatter.format(data, 1);
 
     let table = new google.visualization.Table(document.getElementById('lastaccess_plot'));
     table.draw(data, options);
@@ -214,8 +274,8 @@ function drawGradesTable() {
     let color_id = -1;
     let course_name = "";
     for (let index = 0; index < data_p.length; index++) {
-        if(course_name != data_p[index][0]){
-            color_id = (color_id+1)% colors.length;
+        if (course_name != data_p[index][0]) {
+            color_id = (color_id + 1) % colors.length;
             course_name = data_p[index][0];
         }
         data.setProperty(index, 0, 'style', 'background-color: ' + colors[color_id] + ';');
@@ -230,7 +290,7 @@ function drawGradesTable() {
         width: width,
         alternatingRowStyle: false,
         allowHtml: true,
-        cssClassNames: {headerCell: 'googleHeaderCell'}
+        cssClassNames: { headerCell: 'googleHeaderCell' }
     }
 
     let formatter = new google.visualization.ColorFormat();
