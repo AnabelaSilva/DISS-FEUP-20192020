@@ -11,14 +11,14 @@ function drawHistogram() {
     let data = new google.visualization.DataTable();
 
     // Declare columns
-    
-    
-    data.addColumn({ id: 'Student', type: 'string'});
+
+
+    data.addColumn({ id: 'Student', type: 'string' });
     data.addColumn('number', 'Percentage of participation');
-    
+
     let aux = [];
     histogram_data.forEach(element => {
-        aux.push([element[0],element[1]]);
+        aux.push([element[0], element[1]]);
     });
     // Add data.
     data.addRows(aux);
@@ -42,9 +42,9 @@ function drawHistogram() {
 
     // The select handler. Call the chart's getSelection() method
     function selectHandler() {
-       var selectedItem = chart.getSelection()[0];
+        var selectedItem = chart.getSelection()[0];
         if (selectedItem) {
-            window.location.href = "/student?id="+histogram_data[selectedItem.row][2];
+            window.location.href = "/student?id=" + histogram_data[selectedItem.row][2];
         }
     }
 
@@ -101,11 +101,7 @@ function drawBoxAndWhiskers() {
         },
         height: height,
         width: width,
-        // hAxis: {
-        //     title: 'Courses',
-        // },
         legend: { position: 'none' },
-        dataOpacity: 0,
         tooltip: { isHtml: true },
         intervals: {
             barWidth: 1,
@@ -115,17 +111,20 @@ function drawBoxAndWhiskers() {
         },
         interval: {
             max: {
-                style: 'bars',
-                fillOpacity: 1,
+                style: 'bars'
             },
             min: {
-                style: 'bars',
-                fillOpacity: 1,
+                style: 'bars'
             }
-        }
+        },
+        dataOpacity: 0
+
     };
     let chart = new google.visualization.ColumnChart(document.getElementById('box_plot'));
+
     chart.draw(data, options);
+
+
 }
 function drawCoursesDisplay() {
     let data = new google.visualization.DataTable();
@@ -144,12 +143,33 @@ function drawCoursesDisplay() {
         data.addColumn({ id: 'median', type: 'number', role: 'interval' });
         data.addColumn({ id: 'thirdQuartile', type: 'number', role: 'interval' });
         data.addColumn({ id: 'max', type: 'number', role: 'interval' });
+
+        data.addColumn({ type: 'string', role: 'tooltip' })
     });
     participation_by_course.forEach(element => {
-        res[0] = res[0].concat(element.forums.values);
-        res[1] = res[1].concat(element.quizzes.values);
-        res[2] = res[2].concat(element.assigns.values);
-        res[3] = res[3].concat(element.ontime.values);
+        if (element.forums.values[1] == null) {
+            res[3].push(null, null, null, null, null, null, "No forums currently available!")
+
+        } else {
+            res[0].push(element.forums.values[0], element.forums.values[1], element.forums.values[2], element.forums.values[3], element.forums.values[4], element.forums.values[5], element.name + ":\n\tMax: " + element.forums.values[5].toFixed(1) + "\n\tQ3: " + element.forums.values[4].toFixed(1) + "\n\tMedian: " + element.forums.values[3].toFixed(1) + "\n\tQ1: " + element.forums.values[2].toFixed(1) + "\n\tMin: " + element.forums.values[1].toFixed(1));
+        } if (element.quizzes.values[1] == null) {
+            res[1].push(null, null, null, null, null, null, "No quizzes currently available!")
+
+        } else {
+            res[1].push(element.quizzes.values[0], element.quizzes.values[1], element.quizzes.values[2], element.quizzes.values[3], element.quizzes.values[4], element.quizzes.values[5], element.name + ":\n\tMax: " + element.quizzes.values[5].toFixed(1) + "\n\tQ3: " + element.quizzes.values[4].toFixed(1) + "\n\tMedian: " + element.quizzes.values[3].toFixed(1) + "\n\tQ1: " + element.quizzes.values[2].toFixed(1) + "\n\tMin: " + element.quizzes.values[1].toFixed(1));
+        } if (element.assigns.values[1] == null) {
+            res[2].push(null, null, null, null, null, null, "No assignments currently available!")
+
+        } else {
+            res[2].push(element.assigns.values[0], element.assigns.values[1], element.assigns.values[2], element.assigns.values[3], element.assigns.values[4], element.assigns.values[5], element.name + ":\n\tMax: " + element.assigns.values[5].toFixed(1) + "\n\tQ3: " + element.assigns.values[4].toFixed(1) + "\n\tMedian: " + element.assigns.values[3].toFixed(1) + "\n\tQ1: " + element.assigns.values[2].toFixed(1) + "\n\tMin: " + element.assigns.values[1].toFixed(1));
+        } if (element.ontime.values[1] == null) {
+            res[3].push(null, null, null, null, null, null, "No assignments currently available!")
+        } else {
+            res[3].push(element.ontime.values[0], element.ontime.values[1], element.ontime.values[2], element.ontime.values[3], element.ontime.values[4], element.ontime.values[5], element.name + ":\n\tMax: " + element.ontime.values[5].toFixed(1) + "\n\tQ3: " + element.ontime.values[4].toFixed(1) + "\n\tMedian: " + element.ontime.values[3].toFixed(1) + "\n\tQ1: " + element.ontime.values[2].toFixed(1) + "\n\tMin: " + element.ontime.values[1].toFixed(1));
+        }   //res[0] = res[0].concat(element.forums.values);
+        // res[1] = res[1].concat(element.quizzes.values);
+        // res[2] = res[2].concat(element.assigns.values);
+        // res[3] = res[3].concat(element.ontime.values);
     });
     console.log(res);
     // Add data.
@@ -244,7 +264,7 @@ function drawLastDays() {
     data.addColumn('number', 'ID');
     data.addColumn('string', 'Student');
     data.addColumn('number', 'Days since last access');
-    data.addColumn('number', 'Mean number of activities per week per course enrolloed');
+    data.addColumn('number', 'Mean number of activities per week per course enrolled');
     data.addRows(data_p);
 
     let options = {
@@ -252,6 +272,7 @@ function drawLastDays() {
         allowHtml: true,
         height: height,
         width: width,
+        sortColumn: 1,
         cssClassNames: { headerCell: 'googleHeaderCell' }
     }
 
@@ -266,12 +287,12 @@ function drawLastDays() {
     // The select handler. Call the chart's getSelection() method
     function selectHandler() {
         var selectedItem = table.getSelection()[0];
-         if (selectedItem) {
+        if (selectedItem) {
             var value = data.getValue(selectedItem.row, 0);
-             window.location.href = "/student?id="+value;
-         }
-     }
- 
+            window.location.href = "/student?id=" + value;
+        }
+    }
+
     google.visualization.events.addListener(table, 'select', selectHandler);
 
     table.draw(data, options);
@@ -318,6 +339,7 @@ function drawGradesTable() {
         width: width,
         alternatingRowStyle: false,
         allowHtml: true,
+        sortColumn: 0,
         cssClassNames: { headerCell: 'googleHeaderCell' }
     }
 

@@ -103,7 +103,7 @@ function get_lastAccess() {
             let last = new Date(element.lastaccess * 1000);
             days = Math.floor((today - last) / (1000 * 60 * 60 * 24));
           }
-          aux.push([element.id, element.name, days, element.weekly_activity]);
+          aux.push([element.id, element.name, days, Number((element.weekly_activity).toFixed(1))]);
         });
         resolve(aux);
       }

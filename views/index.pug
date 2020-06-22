@@ -7,8 +7,9 @@ block content
         let last_access = !{JSON.stringify(last_access)};
         let participation_by_course = !{JSON.stringify(participation_by_course)};
         function drawALL() {
-            drawHistogram();
+            
             drawBoxAndWhiskers();
+            drawHistogram();
             drawLastDays();
             drawCoursesDisplay();
         }
