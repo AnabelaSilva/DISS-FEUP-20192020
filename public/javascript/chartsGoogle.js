@@ -307,7 +307,7 @@ function drawGradesTable() {
             }
             course.evals.forEach(element => {
                 if (element != null) {
-                    data_p.push([course.course, element.name, element.grade, element.percentile]);
+                    data_p.push([course.course, element.name, element.grade, Number(element.percentile.toFixed(2))]);
                 }
             });
         }
