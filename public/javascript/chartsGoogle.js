@@ -294,17 +294,53 @@ function drawLastDays() {
     }
 
     function sortHandler(e) {
-        var selectedItem = table.getSelection()[0];
-        console.log(e);
-        if (selectedItem) {
-            var value = data.getValue(selectedItem.row, 0);
+        if (e.column == 0) {
+            var sortValues = [];
+            var sortRows = [];
+            var sortDirection = (e.ascending) ? 1 : -1;
+            for (var i = 0; i < data.getNumberOfRows(); i++) {
+                sortValues.push(
+                    data.getValue(i, e.column + 1)
+                );
+            }
+            sortValues.sort(
+                function (row1, row2) {
+                    return row1.localeCompare(row2) * sortDirection;
+                }
+            );
+
+            sortValues.forEach(function (sortValue) {
+                sortRows.push(data.getFilteredRows([{ column: e.column + 1, value: sortValue }])[0]);
+            });
+
+            let rows = [];
+            sortRows.forEach(element => {
+                let row = [];
+                for (let index = 0; index < data.getNumberOfColumns(); index++) {
+                    row.push(data.getValue(element, index));
+                }
+                rows.push(row);
+            });
+
+            data.removeRows(0, data.getNumberOfRows());
+            data.addRows(rows);
+            formatter.format(data, 2);
+            options.sortColumn = e.column;
+            options.sortAscending = e.ascending;
+            table.draw(view, options);
+
+        } else {
+            data.sort({ column: e.column + 1, desc: e.ascending });
+            options.sortColumn = e.column;
+            options.sortAscending = e.ascending;
+            table.draw(view, options);
         }
     }
 
     google.visualization.events.addListener(table, 'select', selectHandler);
     google.visualization.events.addListener(table, 'sort', sortHandler);
 
-    var view = new google.visualization.DataView(data);
+    let view = new google.visualization.DataView(data);
 
     view.setColumns([1, 2, 3]);
     table.draw(view, options);
