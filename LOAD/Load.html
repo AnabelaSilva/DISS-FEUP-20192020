@@ -4,6 +4,7 @@
 <head>
     <title>Hello World</title>
     <!-- Your external script -->
+    <!-- python -m SimpleHTTPServer -->
     <script src="https://d3js.org/d3.v5.min.js"></script>
 
 </head>
@@ -24,8 +25,8 @@
     let forums = [];
     let quizzes = [];
     let assigns = [];
-    let beginDate = new Date(2020, 10, 20, 0, 0, 0, 0);
-    d3.dsv(';', "topics.csv").then(function (data) {
+    let beginDate = new Date(2020, 9, 20, 0, 0, 0, 0);
+    d3.dsv(';', "input/topics.csv").then(function (data) {
         for (let index = 0; index < data.length; index++) {
             let element = data[index];
             element.start = Number(element.start);
@@ -35,7 +36,7 @@
             element.id = index;
         }
         topics = data;
-        d3.dsv(',', "s_in_c.csv").then(function (data) {
+        d3.dsv(',', "input/s_in_c.csv").then(function (data) {
             data.forEach(function (d) {
                 d.student = Number(d.student);
                 d.course = Number(d.course);
@@ -45,20 +46,19 @@
                 let topic = topics[index];
                 let DAY = Math.random() * (topic.end - topic.start + 1) + topic.start;
                 good_students.forEach(element => {
-                   if (Math.random() > 0.3) {    
                         if (student_in_course(element, topic.course)) {
-                            participate(element, topic, DAY);
+                            if (Math.random() > 0.3) {    
+                   participate(element, topic, DAY);
                         }
                     }
                 });
                 bad_students.forEach(element => {
-                    if (Math.random() > .3) {
+                    if (student_in_course(element, topic.course)) {
                         if (Math.random() > (Math.exp(Math.E, -25.0 / DAY))) {
-                            if (student_in_course(element, topic.course)) {
                                 participate(element, topic, DAY);
                             }
                         }
-                    }
+                    
                 });
 
             }
@@ -132,13 +132,13 @@
             const element = topics[index];
             switch (element.type) {
                 case 1:
-                    forums.push({ id: element.id, course: element.course });
+                    forums.push({ id: element.id, course: element.course , duedate: Math.floor(Math.floor(beginDate.getTime() + element.end * 1000 * 60 * 60 * 24) / 1000)});
                     break;
                 case 3:
-                    quizzes.push({ id: element.id, course: element.course, attemps: Math.floor(Math.random() * 1.05) });
+                    quizzes.push({ id: element.id, course: element.course, attemps: Math.floor(Math.random() * 1.05), time_open: Math.floor(Math.floor(beginDate.getTime() + element.start * 1000 * 60 * 60 * 24) / 1000),time_close: Math.floor(Math.floor(beginDate.getTime() + element.end * 1000 * 60 * 60 * 24) / 1000) });
                     break;
                 case 4:
-                    assigns.push({ id: element.id, course: element.course, due: Math.floor(Math.floor(beginDate.getTime() + element.end * 1000 * 60 * 60 * 24) / 1000) });
+                    assigns.push({ id: element.id, course: element.course,time_open: Math.floor(Math.floor(beginDate.getTime() + element.start * 1000 * 60 * 60 * 24) / 1000), due: Math.floor(Math.floor(beginDate.getTime() + element.end * 1000 * 60 * 60 * 24) / 1000) });
                     break;
                 default:
                     break;
