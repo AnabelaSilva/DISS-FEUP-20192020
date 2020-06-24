@@ -272,8 +272,9 @@ function drawLastDays() {
         allowHtml: true,
         height: height,
         width: width,
-        sortColumn: 1,
-        cssClassNames: { headerCell: 'googleHeaderCell' }
+        sortColumn: 0,
+        cssClassNames: { headerCell: 'googleHeaderCell' },
+        sort: 'event'
     }
 
     let formatter = new google.visualization.ColorFormat();
@@ -284,7 +285,6 @@ function drawLastDays() {
 
     let table = new google.visualization.Table(document.getElementById('lastaccess_plot'));
 
-    // The select handler. Call the chart's getSelection() method
     function selectHandler() {
         var selectedItem = table.getSelection()[0];
         if (selectedItem) {
@@ -293,9 +293,21 @@ function drawLastDays() {
         }
     }
 
-    google.visualization.events.addListener(table, 'select', selectHandler);
+    function sortHandler(e) {
+        var selectedItem = table.getSelection()[0];
+        console.log(e);
+        if (selectedItem) {
+            var value = data.getValue(selectedItem.row, 0);
+        }
+    }
 
-    table.draw(data, options);
+    google.visualization.events.addListener(table, 'select', selectHandler);
+    google.visualization.events.addListener(table, 'sort', sortHandler);
+
+    var view = new google.visualization.DataView(data);
+
+    view.setColumns([1, 2, 3]);
+    table.draw(view, options);
 }
 function drawGradesTable() {
     let data_p = [];
