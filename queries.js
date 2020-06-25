@@ -322,16 +322,19 @@ function get_timeline_of_activities_done(student_id) {
             aux[element.week] = { week: element.week, percentages: [] };
           }
           let all_activities = element.open_quizzes + element.closed_quizzes /*+ element.open_forums + element.closed_forums */+ element.open_assigns + element.closed_assigns;
-          let done_activities = element.done_quizzes + /*element.done_forums + */element.done_assigns; 
-          if(element.week == 0){
-            console.log(all_activities);
-            console.log(done_activities);
-            console.log(done_activities / all_activities);
-          }
+          let done_activities = element.done_quizzes + /*element.done_forums + */element.done_assigns;          
+          let open_activities = element.open_quizzes /*+ element.open_forums */+ element.open_assigns;          
+          let close_activities = element.closed_quizzes /*+ element.closed_forums */+ element.closed_assigns;
           
           aux[element.week].percentages.push(done_activities / all_activities);
           if (student_id == element.student) {
             aux[element.week].student = done_activities /all_activities;
+            
+            
+            aux[element.week].student_done = done_activities;
+            aux[element.week].student_act = all_activities;
+            aux[element.week].student_open = open_activities;
+            aux[element.week].student_close = close_activities;
           }
         });
         aux.forEach(element => {

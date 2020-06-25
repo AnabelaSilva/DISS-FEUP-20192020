@@ -123,7 +123,7 @@ function drawBoxAndWhiskers() {
     let chart = new google.visualization.ColumnChart(document.getElementById('box_plot'));
 
     chart.draw(data, options);
-
+    d3.selectAll('#box_plot').selectAll('g[clip-path] > g:nth-child(2)').raise();
 
 }
 function drawCoursesDisplay() {
@@ -171,7 +171,6 @@ function drawCoursesDisplay() {
         // res[2] = res[2].concat(element.assigns.values);
         // res[3] = res[3].concat(element.ontime.values);
     });
-    console.log(res);
     // Add data.
     data.addRows(res);
     let options = {
@@ -206,6 +205,7 @@ function drawCoursesDisplay() {
     };
     let chart = new google.visualization.ColumnChart(document.getElementById('courses_plot'));
     chart.draw(data, options);
+    d3.selectAll('#courses_plot').selectAll('g[clip-path] > g:nth-child(2)').raise();
 }
 function drawPercentages() {
     percentages_data.forEach(element => {
@@ -458,16 +458,16 @@ function drawIndicators() {
 }
 
 function drawTimelineDisplay() {
+    // NOT GOOD
     let data_p = [];
     timeline_info.forEach(element => {
-        data_p.push([element.week, element.student, element.average, element.median]);
+        data_p.push([element.week, element.student_open, element.student_close]);
     });
     let data = new google.visualization.DataTable();
     // Declare columns
     data.addColumn('number', 'Week');
-    data.addColumn('number', student.name);
-    data.addColumn('number', 'Average Student');
-    data.addColumn('number', 'Median')
+    data.addColumn('number', 'OPEN');
+    data.addColumn('number', 'CLOSED');
     // Add data.
     data.addRows(data_p);
     let options = {
@@ -482,8 +482,14 @@ function drawTimelineDisplay() {
         },
         legend: {
             position: 'top'
+        },
+        
+        series: {
+            0:{type: 'area',isStacked: true},
+            1:{type: 'area',isStacked: true
         }
+          }
     };
-    let chart = new google.visualization.LineChart(document.getElementById('timeline_plot'));
+    let chart = new google.visualization.ComboChart(document.getElementById('timeline_plot'));
     chart.draw(data, options);
 }
