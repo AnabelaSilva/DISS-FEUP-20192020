@@ -8,7 +8,9 @@ block content
         let weekly_activities = !{JSON.stringify(weekly_activities)};
         let indicators = !{JSON.stringify(indicators)};
         let student = !{JSON.stringify(student)};
+        let timeline_info = !{JSON.stringify(timeline_info)};
         function drawALL() {
+            drawTimelineDisplay();
             drawPercentages();
             drawGradesTable();
             drawWeekly();
@@ -17,6 +19,7 @@ block content
     div(class="content")
         p Student: #{student.name}
         div(class="grid-container")
+            div(id="timeline_plot")
             div(id="week_plot" style={'grid-row-start': 1, 'grid-column-start': 1})
             div(id="percentages_plot" style={'grid-row-start': 1, 'grid-column-start': 2})
             div(id="grades_plot" style={'grid-row-start': 2, 'grid-column-start': 1})

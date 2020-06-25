@@ -456,3 +456,34 @@ function drawIndicators() {
 
     chart.draw(data, options);
 }
+
+function drawTimelineDisplay() {
+    let data_p = [];
+    timeline_info.forEach(element => {
+        data_p.push([element.week, element.student, element.average, element.median]);
+    });
+    let data = new google.visualization.DataTable();
+    // Declare columns
+    data.addColumn('number', 'Week');
+    data.addColumn('number', student.name);
+    data.addColumn('number', 'Average Student');
+    data.addColumn('number', 'Median')
+    // Add data.
+    data.addRows(data_p);
+    let options = {
+        title: "Percentage of activities done(posts, quizzes attempst and submissions) each week",
+        vAxis: {
+            title: 'Number of activities'
+        },
+        height: height,
+        width: width,
+        hAxis: {
+            title: 'Week of the semester'
+        },
+        legend: {
+            position: 'top'
+        }
+    };
+    let chart = new google.visualization.LineChart(document.getElementById('timeline_plot'));
+    chart.draw(data, options);
+}
