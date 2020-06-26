@@ -461,13 +461,28 @@ function drawTimelineDisplay() {
     // NOT GOOD
     let data_p = [];
     timeline_info.forEach(element => {
-        data_p.push([element.week, element.student_open, element.student_close]);
+        data_p.push(
+            [
+                element.week,
+                100*element.student.done_activities_late / element.student.all_activities,
+                
+                100*element.student.done_activities_on_time / element.student.all_activities,
+                100*element.average_late,
+               100*element.average_on_time
+                
+            ]
+        );
     });
+    console.log(data_p);
     let data = new google.visualization.DataTable();
     // Declare columns
     data.addColumn('number', 'Week');
-    data.addColumn('number', 'OPEN');
-    data.addColumn('number', 'CLOSED');
+    
+    data.addColumn('number', 'LATES');
+    data.addColumn('number', 'TIMES');
+    data.addColumn('number', 'LATE');
+    data.addColumn('number', 'TIME');
+    
     // Add data.
     data.addRows(data_p);
     let options = {
@@ -475,6 +490,15 @@ function drawTimelineDisplay() {
         vAxis: {
             title: 'Number of activities'
         },
+        series: {
+            0: {targetAxisIndex: 0},
+            1: {targetAxisIndex: 0},
+            2: {targetAxisIndex: 1},
+            3: {targetAxisIndex: 1},
+           },vAxis: {
+            viewWindow: {
+              max: 100
+            }},
         height: height,
         width: width,
         hAxis: {
@@ -483,13 +507,9 @@ function drawTimelineDisplay() {
         legend: {
             position: 'top'
         },
-        
-        series: {
-            0:{type: 'area',isStacked: true},
-            1:{type: 'area',isStacked: true
-        }
-          }
+        focusTarget: 'category',
+        isStacked: true
     };
-    let chart = new google.visualization.ComboChart(document.getElementById('timeline_plot'));
+    let chart = new google.visualization.AreaChart(document.getElementById('timeline_plot'));
     chart.draw(data, options);
 }
