@@ -16,7 +16,7 @@ function load_database() {
     let params = new URLSearchParams(params_base);
     params.set('wsfunction', 'core_webservice_get_site_info');
     url.search = params;
-    fetch(url)
+    return fetch(url)
         .then(response => response.json())
         .then(data => {
             userid = data.userid;
@@ -29,7 +29,7 @@ function fetch_courses(userid) {
     params.set('wsfunction', 'core_enrol_get_users_courses');
     params.set('userid', userid);
     url.search = params;
-    fetch(url)
+    return fetch(url)
         .then(response => response.json())
         .then(data => {
             params.delete('userid');
@@ -140,7 +140,7 @@ function fetch_discussions(forums) {
             .then(response => response.json())
             .then(data => {
                 let discussions = parse_list_of_discussions(data);
-                fetch_posts(discussions,  element['id']);
+                fetch_posts(discussions, element['id']);
             }));
     });
 }
@@ -186,8 +186,7 @@ function fetch_attempts(quizzes, students_all) {
     params.delete('courseid');
     params.set('status', 'all');
     let index = 0;
-    space_out_requestes(params, quizzes, index, students_all);
-
+    return space_out_requestes(params, quizzes, index, students_all);
 }
 function load_courses_to_db(courses) {
     let sql = 'INSERT INTO Course (id, name) VALUES ' + courses.map((x) => '(?,?)').join(',') + ';';
@@ -270,8 +269,8 @@ function load_evaluations_to_db(res) {
     }
 }
 function load_quizzes_to_db(quizzes) {
-    let sql = 'INSERT INTO Quiz (id, course, attempts_permitted) VALUES ' + quizzes.map((x) => '(?,?,?)').join(',') + ';';
-    let params = [].concat.apply([], quizzes.map((x) => [x['id'], x['course'], x['attempts']]));
+    let sql = 'INSERT INTO Quiz (id, course, attempts_permitted,time_open,time_close) VALUES ' + quizzes.map((x) => '(?,?,?,?,?)').join(',') + ';';
+    let params = [].concat.apply([], quizzes.map((x) => [x['id'], x['course'], x['attempts'], x['time_open'], x['time_close']]));
     db.run(sql, params,
         function (err, result) {
             if (err) {
@@ -283,8 +282,8 @@ function load_quizzes_to_db(quizzes) {
     );
 }
 function load_forums_to_db(forums) {
-    let sql = 'INSERT INTO Forum (id, course) VALUES ' + forums.map((x) => '(?,?)').join(',') + ';';
-    let params = [].concat.apply([], forums.map((x) => [x['id'], x['course']]));
+    let sql = 'INSERT INTO Forum (id, course, due_date) VALUES ' + forums.map((x) => '(?,?,?)').join(',') + ';';
+    let params = [].concat.apply([], forums.map((x) => [x['id'], x['course'], x['due_date']]));
     db.run(sql, params,
         function (err, result) {
             if (err) {
@@ -342,8 +341,8 @@ function load_submissions_to_db(submissions) {
 }
 function load_assigns_to_db(assigns) {
     if (assigns.length > 0) {
-        let sql = 'INSERT INTO Assign (id, course, due_date) VALUES ' + assigns.map((x) => '(?,?,?)').join(',') + ';';
-        let params = [].concat.apply([], assigns.map((x) => [x['id'], x['course'], x['duedate']]));
+        let sql = 'INSERT INTO Assign (id, course, time_open, due_date) VALUES ' + assigns.map((x) => '(?,?,?,?)').join(',') + ';';
+        let params = [].concat.apply([], assigns.map((x) => [x['id'], x['course'], x['time_open'], x['duedate']]));
         db.run(sql, params,
             function (err, result) {
                 if (err) {
@@ -371,7 +370,8 @@ function parse_list_of_evaluations(data) {
         let student = elem.userid;
         elem.gradeitems.forEach(element => {
             let eval = { 'id': element.id, 'name': element.itemname, 'type_id': element.itemtype, 'course': course_id };
-            let grade = { 'student': student, 'value': element.percentageformatted, 'evaluation': element.id };
+            let value = Number(element.percentageformatted.replace('%', ''));
+            let grade = { 'student': student, 'value': value, 'evaluation': element.id };
             evaluations.push(eval);
             grades.push(grade);
         });
@@ -393,7 +393,7 @@ function parse_list_of_submissions(data) {
 function parse_list_of_quizzes(data) {
     let quizzes = [];
     data.quizzes.forEach(element => {
-        let quiz = { 'id': element.id, 'course': element.course, 'attempts': element.attempts == 0 ? null : element.attempts };
+        let quiz = { 'id': element.id, 'course': element.course, 'attempts': element.attempts == 0 ? null : element.attempts, 'time_open': element.timeopen, 'time_close': element.timeclose };
         quizzes.push(quiz);
     });
     return quizzes;
@@ -401,7 +401,7 @@ function parse_list_of_quizzes(data) {
 function parse_list_of_forums(data) {
     let forums = [];
     data.forEach(element => {
-        let forum = { 'id': element.id, 'course': element.course};
+        let forum = { 'id': element.id, 'course': element.course, 'due_date': element.duedate };
         forums.push(forum);
     });
     return forums;
@@ -409,7 +409,7 @@ function parse_list_of_forums(data) {
 function parse_list_of_discussions(data) {
     let discussions = [];
     data.discussions.forEach(element => {
-        let discussion = { 'id': element.id, 'discussion_id': element.discussion};
+        let discussion = { 'id': element.id, 'discussion_id': element.discussion };
         discussions.push(discussion);
     });
     return discussions;
@@ -417,7 +417,7 @@ function parse_list_of_discussions(data) {
 function parse_list_of_posts(data, forum) {
     let posts = [];
     data.posts.forEach(element => {
-        let post = { 'student': element.author.id, 'created': element.timecreated, 'forum': forum, 'type': element.hasparent?1:0};
+        let post = { 'student': element.author.id, 'created': element.timecreated, 'forum': forum, 'type': element.hasparent ? 1 : 0 };
         posts.push(post);
     });
     return posts;
@@ -426,7 +426,7 @@ function parse_list_of_assigns(data) {
     let assigns = [];
     data.courses.forEach(elem => {
         elem.assignments.forEach(element => {
-            let assign = { 'id': element.id, 'course': element.course, 'duedate': element.duedate == 0 ? null : element.duedate };
+            let assign = { 'id': element.id, 'course': element.course, 'time_open': element.allowsubmissionsfromdate == 0 ? null : element.allowsubmissionsfromdate, 'duedate': element.duedate == 0 ? null : element.duedate };
             assigns.push(assign);
         });
     });

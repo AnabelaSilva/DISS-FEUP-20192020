@@ -148,7 +148,7 @@ function drawCoursesDisplay() {
     });
     participation_by_course.forEach(element => {
         if (element.forums.values[1] == null) {
-            res[3].push(null, null, null, null, null, null, "No forums currently available!")
+            res[0].push(null, null, null, null, null, null, "No forums currently available!")
 
         } else {
             res[0].push(element.forums.values[0], element.forums.values[1], element.forums.values[2], element.forums.values[3], element.forums.values[4], element.forums.values[5], element.name + ":\n\tMax: " + element.forums.values[5].toFixed(1) + "\n\tQ3: " + element.forums.values[4].toFixed(1) + "\n\tMedian: " + element.forums.values[3].toFixed(1) + "\n\tQ1: " + element.forums.values[2].toFixed(1) + "\n\tMin: " + element.forums.values[1].toFixed(1));
@@ -172,6 +172,7 @@ function drawCoursesDisplay() {
         // res[3] = res[3].concat(element.ontime.values);
     });
     // Add data.
+    console.log(res);
     data.addRows(res);
     let options = {
         title: "Compare the courses by the percentages of participation",
