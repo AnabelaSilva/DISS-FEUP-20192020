@@ -5,6 +5,7 @@ const app = express();
 const dbFunc = require('./dbFunc.js');
 let db = require("./database.js");
 const queries = require('./queries.js');
+const dummy = require('./dummyData.js');
 
 app.set('view engine', 'pug');
 
@@ -41,6 +42,12 @@ app.get('/reload', (req, res) => {
     console.log("ACABOU");
     res.send('aaaa' + 404);
   })
+});
+
+app.get('/dummy', (req, res) => {
+  dummy.createDummyData().then((v) => {
+    res.redirect('/');
+  });
 });
 
 const server = app.listen(7000, () => {
