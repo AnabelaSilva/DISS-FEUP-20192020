@@ -1,5 +1,5 @@
 const { db, delete_all_records_from_db } = require("./database.js");
-
+const randomNormal = require('random-normal');
 module.exports = {
     createDummyData: createDummyData
 };
@@ -11,6 +11,8 @@ function createDummyData() {
     let number_of_part_time = number_of_enrollements * .8;
     let number_of_full_time = number_of_enrollements * .2;
     let number_of_part_time_2_time = number_of_part_time * (1 - .1 - .23);
+
+    let number_of_days = 131;
 
     let number_of_students_in_a_semester = number_of_part_time + number_of_full_time + number_of_part_time_2_time;
 
@@ -91,12 +93,13 @@ function createDummyData() {
     let forums = [];
     let quizzes = [];
     let assigns = [];
+    let evaluations = [];
     let beginDate = new Date(2020, 9, 20, 0, 0, 0, 0); // 20 out 2020
 
     for (let index = 0; index < topics.length; index++) {
         let topic = topics[index];
-        let DAY = Math.random() * (topic.end - topic.start + 1) + topic.start;
         good_students.forEach(element => {
+            let DAY = Math.random() * (topic.end - topic.start + 1) + topic.start;
             if (student_in_course(element.id, topic.course)) {
                 if (Math.random() < 0.7) {
                     participate(element.id, topic, DAY);
@@ -104,18 +107,52 @@ function createDummyData() {
             }
         });
         bad_students.forEach(element => {
-            if (student_in_course(element, topic.course)) {
+            let DAY = Math.random() * (topic.end - topic.start + 1) + topic.start;
+            if (student_in_course(element.id, topic.course)) {
                 if (Math.random() > DAY / number_of_days) {
-                    participate(element, topic, DAY);
+                    participate(element.id, topic, DAY);
                 }
             }
         });
-
     }
     SeparedteTopics();
 
     //TODO: Evaluation activities
-    //TODO load database
+    let i = 0;
+    let eval_names = ['Teste', 'Entrega', 'Actividade Forum', 'Relatório'];
+    courses.forEach(element => {
+        let number_of_evaluation_activities = Math.random() * (4 - 2) + 2;
+        for (let index = 0; index < number_of_evaluation_activities; index++) {
+            let name = eval_names[Math.floor(Math.random() * eval_names.length)] + " " + index;
+            let eval = { id: i++, name: name, course: element.id };
+            evaluations.push(eval);
+        }
+    });
+    let grades = [];
+    evaluations.forEach(elem => {
+        good_students.forEach(element => {
+            if (student_in_course(element.id, elem.course)) {
+                let val = randomNormal({ mean: 80, dev: 12 });
+                let grade = { student: element.id, evaluation: elem.id, value: val > 100 ? 100 : val };
+                grades.push(grade);
+            }
+        });
+        bad_students.forEach(element => {
+            if (student_in_course(element.id, elem.course)) {
+                let val = randomNormal({ mean: 55, dev: 10 });
+                let grade = { student: element.id, evaluation: elem.id, value: val };
+                grades.push(grade);
+            }
+        });
+        no_students.forEach(element => {
+            if (student_in_course(element.id, elem.course)) {
+                let val = 0;
+                let grade = { student: element.id, evaluation: elem.id, value: val };
+                grades.push(grade);
+            }
+        });
+    });
+
     let promise = new Promise((resolve, reject) => {
         db.serialize(() => {
             db.run("INSERT OR IGNORE INTO Student (id, name) VALUES " + students.map((x) => "(?,?)").join(',') + ";",
@@ -125,31 +162,34 @@ function createDummyData() {
                 .run('INSERT INTO Student_in_Course (student, course, lastaccess) VALUES ' + students_in_courses.map((x) => '(?,?,?)').join(',') + ';',
                     [].concat.apply([], students_in_courses.map((x) => [x['student'], x['course'], x['lastaccess']])))
                 .run('INSERT INTO Forum (id, course, due_date) VALUES ' + forums.map((x) => '(?,?,?)').join(',') + ';',
-                    [].concat.apply([], forums.map((x) => [x['id'], x['course'], x['due_date']])))
+                    [].concat.apply([], forums.map((x) => [x['id'], x['course'], x['duedate']])))
                 .run('INSERT INTO Assign (id, course, time_open, due_date) VALUES ' + assigns.map((x) => '(?,?,?,?)').join(',') + ';',
-                    [].concat.apply([], assigns.map((x) => [x['id'], x['course'], x['time_open'], x['duedate']])))
+                    [].concat.apply([], assigns.map((x) => [x['id'], x['course'], x['time_open'], x['due_date']])))
                 .run('INSERT INTO Quiz (id, course, attempts_permitted,time_open,time_close) VALUES ' + quizzes.map((x) => '(?,?,?,?,?)').join(',') + ';',
                     [].concat.apply([], quizzes.map((x) => [x['id'], x['course'], x['attempts'], x['time_open'], x['time_close']])))
                 .run('INSERT INTO Post (student, forum, created, type) VALUES ' + posts.map((x) => '(?,?,?,?)').join(',') + ';',
-                    [].concat.apply([], posts.map((x) => [x['student'], x['forum'], x['created'], x['type']])))
+                    [].concat.apply([], posts.map((x) => [x['student'], x['forum'], x['datecreated'], x['type']])))
                 .run('INSERT INTO Submission (student, assign, created) VALUES ' + submissions.map((x) => '(?,?,?)').join(',') + ';',
-                    [].concat.apply([], submissions.map((x) => [x['student'], x['assign'], x['created']]))
-                )
+                    [].concat.apply([], submissions.map((x) => [x['student'], x['assign'], x['created']])))
                 .run('INSERT INTO Attempt (student, quiz, start, finish) VALUES ' + attempts.map((x) => '(?,?,?,?)').join(',') + ';',
-                    [].concat.apply([], attempts.map((x) => [x['student'], x['quiz'], x['start'], x['finish']])));
-            resolve(0);
-            //.run(//EVALUATION).run(//GRADES).run().run().run();
+                    [].concat.apply([], attempts.map((x) => [x['student'], x['quiz'], x['start'], x['finish']])))
+                .run('INSERT INTO Evaluation (id, name, course) VALUES ' + evaluations.map((x) => '(?,?,?)').join(',') + ';',
+                    [].concat.apply([], evaluations.map((x) => [x['id'], x['name'], x['course']]))
+                ).run('INSERT INTO Grade (student, value, evaluation) VALUES ' + grades.map((x) => '(?,?,?)').join(',') + ';',
+                    [].concat.apply([], grades.map((x) => [x['student'], x['value'], x['evaluation']])),
+                    () => { resolve(0); });
         });
 
     });
     return promise;
     function participate(student, topic, day) {
+        let day_timestamp = Math.floor(Math.floor(beginDate.getTime() + day * 1000 * 60 * 60 * 24) / 1000);
         switch (topic.type) {
             case 1:
                 let post = {
                     student: student,
                     forum: topic.id,
-                    datecreated: Math.floor(Math.floor(beginDate.getTime() + day * 1000 * 60 * 60 * 24) / 1000),
+                    datecreated: day_timestamp,
                     type: Math.floor(Math.random() * 2)
                 };
                 posts.push(post);
@@ -158,7 +198,8 @@ function createDummyData() {
                 let quiz = {
                     student: student,
                     quiz: topic.id,
-                    start: Math.floor(Math.floor(beginDate.getTime() + day * 1000 * 60 * 60 * 24) / 1000)
+                    start: day_timestamp,
+                    finish: Math.floor(day_timestamp + Math.random() * 60 * 60 * 2)
                 };
                 attempts.push(quiz);
                 break;
@@ -166,13 +207,22 @@ function createDummyData() {
                 let subm = {
                     student: student,
                     assign: topic.id,
-                    created: Math.floor(Math.floor(beginDate.getTime() + day * 1000 * 60 * 60 * 24) / 1000)
+                    created: day_timestamp
                 };
                 submissions.push(subm);
                 break;
             default:
                 //console.log("Other");
                 break;
+        }
+        for (let index = 0; index < students_in_courses.length; index++) {
+            const e = students_in_courses[index];
+            if (e.student == student && e.course == topic.course) {
+                if (day_timestamp > students_in_courses[index].lastaccess || students_in_courses[index].lastaccess == null) {
+                    students_in_courses[index].lastaccess = day_timestamp;
+                }
+                break;
+            }
         }
     }
     function student_in_course(student, course) {
@@ -189,13 +239,29 @@ function createDummyData() {
             const element = topics[index];
             switch (element.type) {
                 case 1:
-                    forums.push({ id: element.id, course: element.course, duedate: Math.floor(Math.floor(beginDate.getTime() + element.end * 1000 * 60 * 60 * 24) / 1000) });
+                    forums.push({
+                        id: element.id,
+                        course: element.course,
+                        duedate: Math.floor(Math.floor(beginDate.getTime() + element.end * 1000 * 60 * 60 * 24) / 1000)
+                    });
                     break;
                 case 3:
-                    quizzes.push({ id: element.id, course: element.course, attempts: Math.floor(Math.random() * 1.05), time_open: Math.floor(Math.floor(beginDate.getTime() + element.start * 1000 * 60 * 60 * 24) / 1000), time_close: Math.floor(Math.floor(beginDate.getTime() + element.end * 1000 * 60 * 60 * 24) / 1000) });
+                    let t = Math.floor(Math.random() * 1.05);
+                    quizzes.push({
+                        id: element.id,
+                        course: element.course,
+                        attempts: t == 0 ? null : t,
+                        time_open: Math.floor(Math.floor(beginDate.getTime() + element.start * 1000 * 60 * 60 * 24) / 1000),
+                        time_close: Math.floor(Math.floor(beginDate.getTime() + element.end * 1000 * 60 * 60 * 24) / 1000)
+                    });
                     break;
                 case 4:
-                    assigns.push({ id: element.id, course: element.course, time_open: Math.floor(Math.floor(beginDate.getTime() + element.start * 1000 * 60 * 60 * 24) / 1000), due: Math.floor(Math.floor(beginDate.getTime() + element.end * 1000 * 60 * 60 * 24) / 1000) });
+                    assigns.push({
+                        id: element.id,
+                        course: element.course,
+                        time_open: Math.floor(Math.floor(beginDate.getTime() + element.start * 1000 * 60 * 60 * 24) / 1000),
+                        due_date: Math.floor(Math.floor(beginDate.getTime() + element.end * 1000 * 60 * 60 * 24) / 1000)
+                    });
                     break;
                 default:
                     break;
