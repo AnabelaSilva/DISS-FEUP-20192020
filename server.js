@@ -40,7 +40,7 @@ app.get('/student', (req, res) => {
 app.get('/course', (req, res) => {
   let promises = [];
   let course_id = Number(req.query.id);
-  promises.push(queries.get_course(course_id));
+  promises.push(queries.get_course_info(course_id));
   Promise.all(promises).then((values) => {
     res.render('course', { title: 'Mestrado em Tecnologias e Sistemas Informáticos Web', course: values[0]});
   });
