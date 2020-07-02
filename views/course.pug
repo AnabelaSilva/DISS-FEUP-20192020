@@ -1,0 +1,19 @@
+extends default
+
+block content
+    script.
+        let course = !{JSON.stringify(course)};
+
+        function drawALL() {
+            //- drawTimelineDisplay();
+        }
+    
+    div(class="content")
+        p Course: #{course.name}
+        div(class="grid-container")
+            //- div(id="timeline_plot")
+ 
+    script(type="text/javascript" src="https://www.gstatic.com/charts/loader.js")
+    script(type="text/javascript" src="javascript/chartsGoogle.js")
+        
+

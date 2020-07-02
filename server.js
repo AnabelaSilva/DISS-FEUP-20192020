@@ -36,6 +36,16 @@ app.get('/student', (req, res) => {
     res.render('student', { title: 'Mestrado em Tecnologias e Sistemas Informáticos Web', student: values[0], percentages_data: values[1], grades_data: values[2], students_courses: values[3], weekly_activities: values[4], indicators: values[5], timeline_info: values[6] });
   });
 });
+
+app.get('/course', (req, res) => {
+  let promises = [];
+  let course_id = Number(req.query.id);
+  promises.push(queries.get_course(course_id));
+  Promise.all(promises).then((values) => {
+    res.render('course', { title: 'Mestrado em Tecnologias e Sistemas Informáticos Web', course: values[0]});
+  });
+});
+
 app.get('/reload', (req, res) => {
   dbFunc.routeReload().then((v) => {
     // res.redirect('/');
@@ -43,7 +53,6 @@ app.get('/reload', (req, res) => {
     res.send('aaaa' + 404);
   })
 });
-
 app.get('/dummy', (req, res) => {
   dummy.createDummyData().then((v) => {
     res.redirect('/');
