@@ -7,6 +7,50 @@ google.charts.load('current', { 'packages': ['corechart', 'table'] });
 // Set a callback to run when the Google Visualization API is loaded.
 google.charts.setOnLoadCallback(drawALL);
 
+function draw_participation_on_course() {
+    let data = new google.visualization.DataTable();
+
+    data.addColumn({ id: 'Student', type: 'string' });
+    data.addColumn('number', 'Percentage of participation');
+
+    let aux = [];
+    participation_info.forEach(element => {
+        aux.push([element[1], element[2]]);
+    });
+    // Add data.
+    data.addRows(aux);
+    var options = {
+        title: 'Distribution of the students by the percentage of participated activities on this course',
+        legend: { position: 'none' },
+        hAxis: {
+            title: 'Percentage of participated activities',
+            viewWindowMode: 'maximized',
+            viewWindow: { max: 100 }
+        },
+        allowHtml: true,
+        height: height,
+        width: width,
+        vAxis: {
+            title: 'Number of students'
+        }
+    };
+
+    let chart = new google.visualization.Histogram(document.getElementById('participation_on_course_plot'));
+
+    // The select handler. Call the chart's getSelection() method
+    function selectHandler() {
+        var selectedItem = chart.getSelection()[0];
+        if (selectedItem) {
+            window.location.href = "/student?id=" + participation_info[selectedItem.row][0];
+        }
+    }
+    google.visualization.events.addListener(chart, 'select', selectHandler);
+    chart.draw(data, options);
+}
+
+
+
+
 function drawHistogram() {
     let data = new google.visualization.DataTable();
 
@@ -457,7 +501,6 @@ function drawIndicators() {
 
     chart.draw(data, options);
 }
-
 function drawTimelineDisplay() {
     // NOT GOOD
     let data_p = [];

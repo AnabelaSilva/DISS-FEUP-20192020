@@ -320,12 +320,12 @@ function get_timeline_of_activities_done(student_id) {
           if (aux[element.week] == undefined) {
             aux[element.week] = { week: element.week, percentages_on_time: [], percentages_late: [], student: {} };
           }
-          let open_activities = element.open_quizzes /*+ element.open_forums */+ element.open_assigns;
-          let close_activities = element.closed_quizzes /*+ element.closed_forums */+ element.closed_assigns;
+          let open_activities = element.open_quizzes /*+ element.open_forums */ + element.open_assigns;
+          let close_activities = element.closed_quizzes /*+ element.closed_forums */ + element.closed_assigns;
           let all_activities = open_activities + close_activities;
 
-          let done_activities_on_time = element.done_quizzes_on_time /*+ element.done_forums_on_time */+ element.done_assigns_on_time;
-          let done_activities_late = element.done_quizzes_late /*+ element.done_forums_late */+ element.done_assigns_late;
+          let done_activities_on_time = element.done_quizzes_on_time /*+ element.done_forums_on_time */ + element.done_assigns_on_time;
+          let done_activities_late = element.done_quizzes_late /*+ element.done_forums_late */ + element.done_assigns_late;
 
           aux[element.week].percentages_on_time.push(done_activities_on_time / all_activities);
           aux[element.week].percentages_late.push(done_activities_late / all_activities);
@@ -374,7 +374,11 @@ function get_participation_on_course(course_id) {
           console.trace();
           return err;
         }
-        resolve(rows);
+        let res = [];
+        rows.forEach(element => {
+          res.push([element.student, element.name, 100 * element.participation / element.opportunities]);
+        });
+        resolve(res);
       }
     );
   });

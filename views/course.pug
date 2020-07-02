@@ -3,15 +3,16 @@ extends default
 block content
     script.
         let course = !{JSON.stringify(course)};
+        let participation_info = !{JSON.stringify(participation_info)};
 
         function drawALL() {
-            //- drawTimelineDisplay();
+            draw_participation_on_course();
         }
     
     div(class="content")
         p Course: #{course.name}
         div(class="grid-container")
-            //- div(id="timeline_plot")
+            div(id="participation_on_course_plot")
  
     script(type="text/javascript" src="https://www.gstatic.com/charts/loader.js")
     script(type="text/javascript" src="javascript/chartsGoogle.js")
