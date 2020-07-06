@@ -2,7 +2,7 @@ const height = 275;
 const width = 550;
 
 // Load the Visualization API and the corechart package.
-google.charts.load('current', { 'packages': ['corechart', 'table'] });
+google.charts.load('current', { 'packages': ['corechart', 'table', 'timeline'] });
 
 // Set a callback to run when the Google Visualization API is loaded.
 google.charts.setOnLoadCallback(drawALL);
@@ -47,7 +47,38 @@ function draw_participation_on_course() {
     google.visualization.events.addListener(chart, 'select', selectHandler);
     chart.draw(data, options);
 }
+function draw_timeline_on_course() {
+    let data = new google.visualization.DataTable();
 
+    data.addColumn('string', 'Row');
+    data.addColumn('string', 'Bar');
+    //data.addColumn('string', 'Tooltip');
+    data.addColumn('datetime', 'Start');
+    data.addColumn('datetime', 'End');
+
+    let aux = [];
+    timeline_info.forEach(element => {
+        aux.push(['Assign', '' + element.id, new Date(element.start * 1000), new Date(element.end * 1000)]);
+        element.students.forEach(ele => {
+            aux.push(['Assign', '' + element.id, ele.start == null ? null : new Date(ele.start * 1000), ele.end == null ? null : new Date(ele.end * 1000)]);
+        });
+    });
+
+    console.log(aux);
+    // Add data.
+    data.addRows(aux);
+    var options = {
+        title: 'TODO CAHNGE',
+
+        allowHtml: true,
+        height: height,
+        width: width
+    };
+
+    let chart = new google.visualization.Timeline(document.getElementById('timeline_on_course_plot'));
+
+    chart.draw(data, options);
+}
 
 
 
@@ -508,12 +539,12 @@ function drawTimelineDisplay() {
         data_p.push(
             [
                 element.week,
-                100*element.student.done_activities_late / element.student.all_activities,
-                
-                100*element.student.done_activities_on_time / element.student.all_activities,
-                100*element.average_late,
-               100*element.average_on_time
-                
+                100 * element.student.done_activities_late / element.student.all_activities,
+
+                100 * element.student.done_activities_on_time / element.student.all_activities,
+                100 * element.average_late,
+                100 * element.average_on_time
+
             ]
         );
     });
@@ -521,12 +552,12 @@ function drawTimelineDisplay() {
     let data = new google.visualization.DataTable();
     // Declare columns
     data.addColumn('number', 'Week');
-    
+
     data.addColumn('number', 'LATES');
     data.addColumn('number', 'TIMES');
     data.addColumn('number', 'LATE');
     data.addColumn('number', 'TIME');
-    
+
     // Add data.
     data.addRows(data_p);
     let options = {
@@ -535,14 +566,15 @@ function drawTimelineDisplay() {
             title: 'Number of activities'
         },
         series: {
-            0: {targetAxisIndex: 0},
-            1: {targetAxisIndex: 0},
-            2: {targetAxisIndex: 1},
-            3: {targetAxisIndex: 1},
-           },vAxis: {
+            0: { targetAxisIndex: 0 },
+            1: { targetAxisIndex: 0 },
+            2: { targetAxisIndex: 1 },
+            3: { targetAxisIndex: 1 },
+        }, vAxis: {
             viewWindow: {
-              max: 100
-            }},
+                max: 100
+            }
+        },
         height: height,
         width: width,
         hAxis: {

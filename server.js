@@ -42,8 +42,9 @@ app.get('/course', (req, res) => {
   let course_id = Number(req.query.id);
   promises.push(queries.get_course_info(course_id));
   promises.push(queries.get_participation_on_course(course_id));
+  promises.push(queries.get_timeline_info_on_course(course_id));
   Promise.all(promises).then((values) => {
-    res.render('course', { title: 'Mestrado em Tecnologias e Sistemas Informáticos Web', course: values[0], participation_info: values[1]});
+    res.render('course', { title: 'Mestrado em Tecnologias e Sistemas Informáticos Web', course: values[0], participation_info: values[1], timeline_info: values[2] });
   });
 });
 
