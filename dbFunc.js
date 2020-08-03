@@ -189,8 +189,8 @@ function fetch_attempts(quizzes, students_all) {
     return space_out_requestes(params, quizzes, index, students_all);
 }
 function load_courses_to_db(courses) {
-    let sql = 'INSERT INTO Course (id, name) VALUES ' + courses.map((x) => '(?,?)').join(',') + ';';
-    let params = [].concat.apply([], courses.map((x) => [x['id'], x['name']]));
+    let sql = 'INSERT INTO Course (id, name, code) VALUES ' + courses.map((x) => '(?,?,?)').join(',') + ';';
+    let params = [].concat.apply([], courses.map((x) => [x['id'], x['name'], x.code]));
     db.run(sql, params,
         function (err, result) {
             if (err) {
@@ -435,7 +435,7 @@ function parse_list_of_assigns(data) {
 function parse_list_of_courses(data) {
     let courses = [];
     data.forEach(element => {
-        let course = { 'id': element.id, 'name': element.fullname };
+        let course = { 'id': element.id, 'name': element.fullname, code: element.shortname };
         courses.push(course);
     });
     return courses;

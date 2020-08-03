@@ -42,7 +42,17 @@
     let no_students = shuffled.slice(number_of_bad_students, number_of_not_participating + number_of_bad_students);
     let good_students = shuffled.slice(number_of_not_participating + number_of_bad_students);
 
-    let courses = [{ id: 22116, name: "Programação Web" }, { id: 22119, name: "Pesquisa e Recuperação de Informação" }, { id: 22120, name: "Realidade Virtual Distribuída" }, { id: 22121, name: "Sistemas Multiagente" }, { id: 22122, name: "Interação Humano-Computador" }, { id: 22124, name: "Extração do Conhecimento de Dados" }, { id: 22126, name: "Visualização de Informação" }, { id: 22129, name: "Elaboração da Dissertação" }, { id: 22130, name: "Heurísticas Modernas" }];
+    let courses = [
+        { id: 22116, name: "Programação Web", code: },
+        { id: 22119, name: "Pesquisa e Recuperação de Informação" },
+        { id: 22120, name: "Realidade Virtual Distribuída" },
+        { id: 22121, name: "Sistemas Multiagente" },
+        { id: 22122, name: "Interação Humano-Computador" },
+        { id: 22124, name: "Extração do Conhecimento de Dados" },
+        { id: 22126, name: "Visualização de Informação" },
+        { id: 22129, name: "Elaboração da Dissertação" },
+        { id: 22130, name: "Heurísticas Modernas" }
+    ];
 
     const shuffled2 = students.sort(() => 0.5 - Math.random());
     let full_time = shuffled.slice(0, number_of_full_time);
@@ -86,7 +96,7 @@
     phases.forEach(element => {
         let number_of_topics = Math.floor(Math.random() * (6 - 2) + 2);
         for (let index = 0; index < number_of_topics; index++) {
-            let topic = { course: element.course, start: element.start, end: element.end, type: Math.floor(Math.random() * (6 - 1) + 1), id:  id_of_act};
+            let topic = { course: element.course, start: element.start, end: element.end, type: Math.floor(Math.random() * (6 - 1) + 1), id: id_of_act };
             topics.push(topic);
             id_of_act++;
         }
@@ -113,7 +123,7 @@
         });
         bad_students.forEach(element => {
             if (student_in_course(element, topic.course)) {
-                if (Math.random() > DAY/number_of_days ) {
+                if (Math.random() > DAY / number_of_days) {
                     participate(element, topic, DAY);
                 }
             }
