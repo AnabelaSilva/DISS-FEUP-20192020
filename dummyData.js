@@ -127,7 +127,6 @@ function createDummyData() {
     }
     SeparedteTopics();
 
-    //TODO: Evaluation activities
     let i = 0;
     let eval_names = ['Teste', 'Entrega', 'Actividade Forum', 'Relatório'];
     courses.forEach(element => {
@@ -167,8 +166,8 @@ function createDummyData() {
         db.serialize(() => {
             db.run("INSERT OR IGNORE INTO Student (id, name) VALUES " + students.map((x) => "(?,?)").join(',') + ";",
                 [].concat.apply([], students.map((x) => [x['id'], x['name']])))
-                .run('INSERT INTO Course (id, name) VALUES ' + courses.map((x) => '(?,?)').join(',') + ';',
-                    [].concat.apply([], courses.map((x) => [x['id'], x['name']])))
+                .run('INSERT INTO Course (id, name, code) VALUES ' + courses.map((x) => '(?,?,?)').join(',') + ';',
+                    [].concat.apply([], courses.map((x) => [x['id'], x['name'], x['code']])))
                 .run('INSERT INTO Student_in_Course (student, course, lastaccess) VALUES ' + students_in_courses.map((x) => '(?,?,?)').join(',') + ';',
                     [].concat.apply([], students_in_courses.map((x) => [x['student'], x['course'], x['lastaccess']])))
                 .run('INSERT INTO Forum (id, course, due_date) VALUES ' + forums.map((x) => '(?,?,?)').join(',') + ';',

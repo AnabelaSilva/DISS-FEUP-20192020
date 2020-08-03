@@ -79,9 +79,6 @@ function draw_timeline_on_course() {
 
     chart.draw(data, options);
 }
-
-
-
 function drawHistogram() {
     let data = new google.visualization.DataTable();
 
@@ -124,9 +121,12 @@ function drawHistogram() {
     }
 
     google.visualization.events.addListener(chart, 'select', selectHandler);
+    google.visualization.events.addListener(chart, 'onmouseover', changecursorPOINTER);
+    google.visualization.events.addListener(chart, 'onmouseout', changecursorDEFAULT);
 
     chart.draw(data, options);
 }
+
 function drawBoxAndWhiskers() {
     let data_p = [];
     let max_number_of_evals = 0;
@@ -411,15 +411,20 @@ function drawLastDays() {
             options.sortAscending = e.ascending;
             table.draw(view, options);
         }
+        d3.selectAll('#lastaccess_plot').selectAll('table').style('cursor','pointer');
+
     }
 
     google.visualization.events.addListener(table, 'select', selectHandler);
     google.visualization.events.addListener(table, 'sort', sortHandler);
 
+    
     let view = new google.visualization.DataView(data);
 
     view.setColumns([1, 2, 3]);
     table.draw(view, options);
+
+    d3.selectAll('#lastaccess_plot').selectAll('table').style('cursor','pointer');
 }
 function drawGradesTable() {
     let data_p = [];
@@ -588,4 +593,12 @@ function drawTimelineDisplay() {
     };
     let chart = new google.visualization.AreaChart(document.getElementById('timeline_plot'));
     chart.draw(data, options);
+}
+
+
+function changecursorPOINTER(e) {
+    document.body.style.cursor = 'pointer';
+}
+function changecursorDEFAULT(e) {
+    document.body.style.cursor = 'default';
 }
