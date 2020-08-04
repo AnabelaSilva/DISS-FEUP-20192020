@@ -130,7 +130,6 @@ function drawHistogram() {
 
     chart.draw(data, options);
 }
-
 function drawBoxAndWhiskers() {
     let data_p = [];
     let max_number_of_evals = 0;
@@ -542,47 +541,30 @@ function drawIndicators() {
     chart.draw(data, options);
 }
 function drawTimelineDisplay() {
-    // NOT GOOD
     let data_p = [];
     timeline_info.forEach(element => {
         data_p.push(
             [
                 element.week,
-                100 * element.student.done_activities_late / element.student.all_activities,
-
-                100 * element.student.done_activities_on_time / element.student.all_activities,
-                100 * element.average_late,
-                100 * element.average_on_time
+                100 * element.student.done_activities/ element.student.all_activities,
+                100 * element.average,
 
             ]
         );
     });
-    console.log(data_p);
     let data = new google.visualization.DataTable();
     // Declare columns
     data.addColumn('number', 'Week');
-
-    data.addColumn('number', 'LATES');
-    data.addColumn('number', 'TIMES');
-    data.addColumn('number', 'LATE');
-    data.addColumn('number', 'TIME');
+    data.addColumn('number', student.name);
+    data.addColumn('number', 'Average Student');
 
     // Add data.
     data.addRows(data_p);
     let options = {
-        title: "Percentage of activities done(posts, quizzes attempst and submissions) each week",
+        title: "Percentage of activities done(posts, quizzes attempts and submissions) until week",
         vAxis: {
-            title: 'Number of activities'
-        },
-        series: {
-            0: { targetAxisIndex: 0 },
-            1: { targetAxisIndex: 0 },
-            2: { targetAxisIndex: 1 },
-            3: { targetAxisIndex: 1 },
-        }, vAxis: {
-            viewWindow: {
-                max: 100
-            }
+            title: 'Percentage of activities',
+            maxValue:100
         },
         height: height,
         width: width,
@@ -592,10 +574,8 @@ function drawTimelineDisplay() {
         legend: {
             position: 'top'
         },
-        focusTarget: 'category',
-        isStacked: true
     };
-    let chart = new google.visualization.AreaChart(document.getElementById('timeline_plot'));
+    let chart = new google.visualization.LineChart(document.getElementById('timeline_plot'));
     chart.draw(data, options);
 }
 

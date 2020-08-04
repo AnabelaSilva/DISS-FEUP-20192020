@@ -317,7 +317,7 @@ function get_timeline_of_activities_done(student_id) {
         let aux = []
         rows.forEach(element => {
           if (aux[element.week] == undefined) {
-            aux[element.week] = { week: element.week, percentages_on_time: [], percentages_late: [], student: {} };
+            aux[element.week] = { week: element.week, percentages: [], student: {} };
           }
           let open_activities = element.open_quizzes /*+ element.open_forums */ + element.open_assigns;
           let close_activities = element.closed_quizzes /*+ element.closed_forums */ + element.closed_assigns;
@@ -326,17 +326,14 @@ function get_timeline_of_activities_done(student_id) {
           let done_activities_on_time = element.done_quizzes_on_time /*+ element.done_forums_on_time */ + element.done_assigns_on_time;
           let done_activities_late = element.done_quizzes_late /*+ element.done_forums_late */ + element.done_assigns_late;
 
-          aux[element.week].percentages_on_time.push(done_activities_on_time / all_activities);
-          aux[element.week].percentages_late.push(done_activities_late / all_activities);
+          aux[element.week].percentages.push((done_activities_on_time+done_activities_late) / all_activities);
           if (student_id == element.student) {
             aux[element.week].student.all_activities = all_activities;
-            aux[element.week].student.done_activities_on_time = done_activities_on_time;
-            aux[element.week].student.done_activities_late = done_activities_late;
+            aux[element.week].student.done_activities = done_activities_on_time+done_activities_late;
           }
         });
         aux.forEach(element => {
-          element.average_on_time = d3.mean(element.percentages_on_time);
-          element.average_late = d3.mean(element.percentages_late);
+          element.average = d3.mean(element.percentages);
         });
         resolve(aux);
       }
