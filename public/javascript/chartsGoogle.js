@@ -45,6 +45,10 @@ function draw_participation_on_course() {
         }
     }
     google.visualization.events.addListener(chart, 'select', selectHandler);
+    
+    google.visualization.events.addListener(chart, 'onmouseover', changecursorPOINTER);
+    google.visualization.events.addListener(chart, 'onmouseout', changecursorDEFAULT);
+
     chart.draw(data, options);
 }
 function draw_timeline_on_course() {

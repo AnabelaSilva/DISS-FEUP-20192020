@@ -109,7 +109,7 @@ function createDummyData() {
     for (let index = 0; index < topics.length; index++) {
         let topic = topics[index];
         good_students.forEach(element => {
-            let DAY = Math.random() * (topic.end - topic.start + 1) + topic.start;
+            let DAY = Skedt_random() * (topic.end - topic.start + 1) + topic.start;
             if (student_in_course(element.id, topic.course)) {
                 if (Math.random() < 0.7) {
                     participate(element.id, topic, DAY);
@@ -117,7 +117,7 @@ function createDummyData() {
             }
         });
         bad_students.forEach(element => {
-            let DAY = Math.random() * (topic.end - topic.start + 1) + topic.start;
+            let DAY = Skedt_random() * (topic.end - topic.start + 1) + topic.start;
             if (student_in_course(element.id, topic.course)) {
                 if (Math.random() > DAY / number_of_days) {
                     participate(element.id, topic, DAY);
@@ -277,4 +277,14 @@ function createDummyData() {
             }
         }
     }
+}
+function Skedt_random() {
+    let max = Math.random();
+    for (let index = 0; index < 5; index++) {
+        const element = Math.random();
+        if(element>max){
+            max = element;
+        }
+    }
+    return max;
 }
