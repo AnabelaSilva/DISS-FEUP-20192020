@@ -319,17 +319,17 @@ function get_timeline_of_activities_done(student_id) {
           if (aux[element.week] == undefined) {
             aux[element.week] = { week: element.week, percentages: [], student: {} };
           }
-          let open_activities = element.open_quizzes + element.open_forums  + element.open_assigns;
-          let close_activities = element.closed_quizzes + element.closed_forums  + element.closed_assigns;
+          let open_activities = element.open_quizzes + element.open_forums + element.open_assigns;
+          let close_activities = element.closed_quizzes + element.closed_forums + element.closed_assigns;
           let all_activities = open_activities + close_activities;
 
-          let done_activities_on_time = element.done_quizzes_on_time + element.done_forums_on_time  + element.done_assigns_on_time;
-          let done_activities_late = element.done_quizzes_late + element.done_forums_late  + element.done_assigns_late;
+          let done_activities_on_time = element.done_quizzes_on_time + element.done_forums_on_time + element.done_assigns_on_time;
+          let done_activities_late = element.done_quizzes_late + element.done_forums_late + element.done_assigns_late;
 
-          aux[element.week].percentages.push((done_activities_on_time+done_activities_late) / all_activities);
+          aux[element.week].percentages.push((done_activities_on_time + done_activities_late) / all_activities);
           if (student_id == element.student) {
             aux[element.week].student.all_activities = all_activities;
-            aux[element.week].student.done_activities = done_activities_on_time+done_activities_late;
+            aux[element.week].student.done_activities = done_activities_on_time + done_activities_late;
           }
         });
         aux.forEach(element => {
@@ -394,18 +394,18 @@ function get_timeline_info_on_course(course_id) {
 
         rows.forEach(elem => {
           let index = res.find(element => element.id == elem.act_id);
-          
+
           console.log(elem);
           console.log(index);
           if (index == undefined) {
-            index = res[res.push({ id: elem.act_id, start: elem.start, end: elem.end ,students: [], not_done:0}) - 1];
+            index = res[res.push({ id: elem.act_id, start: elem.start, end: elem.end, students: [], not_done: 0 }) - 1];
           }
           // TODO endK
-          if(elem.s_start == null){
-            index.not_done= index.not_done+1;
-          }else{
-            index.students.push({student: elem.student, start: elem.s_start, end: elem.s_start});
-      
+          if (elem.s_start == null) {
+            index.not_done = index.not_done + 1;
+          } else {
+            index.students.push({ student: elem.student, start: elem.s_start, end: elem.s_start });
+
           }
         });
         resolve(res);
@@ -414,7 +414,34 @@ function get_timeline_info_on_course(course_id) {
   });
   return promise;
 }
-
+function get_activities_by_week_by_course() {
+  let sql = queries_sql.get_activities_by_week_by_course;
+  let params = [];
+  let promise = new Promise((resolve, reject) => {
+    db.all(sql, params,
+      function (err, rows) {
+        if (err) {
+          console.error(err);
+          console.trace();
+          return err;
+        }
+        let aux = []
+        rows.forEach(element => {
+          if (aux[element.week] == undefined) {
+            aux[element.week] = { week: element.week, courses: [] };
+          }
+          if (aux[element.week].courses[element.course] == undefined) {
+            aux[element.week].courses[element.course] = { course: element.course, activities: 0, done_activities: 0 };
+          }
+          aux[element.week].courses[element.course].activities += element.quizzes + element.forums + element.assigns;
+          aux[element.week].courses[element.course].done_activities += element.done_quizzes + element.done_forums + element.done_assigns;
+        });
+        resolve(aux);
+      }
+    );
+  });
+  return promise;
+}
 module.exports = {
   get_course_info: get_course_info,
   get_participation_on_course: get_participation_on_course,
@@ -428,11 +455,14 @@ module.exports = {
   get_indicators: get_indicators,
   get_lastAccess: get_lastAccess,
   get_timeline_of_activities_done: get_timeline_of_activities_done,
-  get_timeline_info_on_course: get_timeline_info_on_course
+  get_timeline_info_on_course: get_timeline_info_on_course,
+  get_activities_by_week_by_course: get_activities_by_week_by_course,
 };
 
 let queries_sql = {
+
   get_course_info: "SELECT * FROM COURSE WHERE id = ?;",
+  get_activities_by_week_by_course: "SELECT number AS week,        STUDENT_IN_COURSE.course,        STUDENT_IN_COURSE.student,        count(DISTINCT QUIZ.id) AS quizzes,        count(DISTINCT ASSIGN.id) AS assigns,        count(DISTINCT FORUM.id) AS forums,        count(DISTINCT post1.forum) AS done_forums,        count(DISTINCT submission1.assign) AS done_assigns,        count(DISTINCT attempt1.quiz) AS done_quizzes   FROM WEEK        LEFT JOIN        STUDENT_IN_COURSE        LEFT JOIN        QUIZ ON (STUDENT_IN_COURSE.course = QUIZ.course AND                  number >= (QUIZ.time_open - 1602284400) / 604800)         LEFT JOIN        FORUM ON (STUDENT_IN_COURSE.course = FORUM.course AND                   number >= (FORUM.time_open - 1602284400) / 604800)         LEFT JOIN        ASSIGN ON (STUDENT_IN_COURSE.course = ASSIGN.course AND                    number >= (ASSIGN.time_open - 1602284400) / 604800)         LEFT JOIN        ATTEMPT AS attempt1 ON (number >= (attempt1.start - 1602284400) / 604800 AND                                 STUDENT_IN_COURSE.student = attempt1.student AND                                 QUIZ.id = attempt1.quiz)         LEFT JOIN        SUBMISSION AS submission1 ON (number >= (submission1.created - 1602284400) / 604800 AND                                       STUDENT_IN_COURSE.student = submission1.student AND                                       ASSIGN.id = submission1.assign)         LEFT JOIN        POST AS post1 ON (number >= (post1.created - 1602284400) / 604800 AND                           STUDENT_IN_COURSE.student = post1.student AND                           FORUM.id = post1.forum)   GROUP BY number,           STUDENT_IN_COURSE.student,           STUDENT_IN_COURSE.course; ",
   get_activities_from_courses: "SELECT student, course, forum, post, attempt, quiz, submission, assign, ontime, code FROM COURSE JOIN ( SELECT STUDENT_IN_COURSE.student, course, count(DISTINCT POST.forum) AS post, count(DISTINCT FORUM.id) AS forum FROM STUDENT_IN_COURSE LEFT JOIN FORUM USING ( course ) LEFT JOIN POST ON (STUDENT_IN_COURSE.student = POST.student AND FORUM.id = POST.forum) GROUP BY course, STUDENT_IN_COURSE.student ) AS tab1 ON (course = COURSE.id) JOIN ( SELECT STUDENT_IN_COURSE.student, course, count(DISTINCT ATTEMPT.quiz) AS attempt, count(DISTINCT QUIZ.id) AS quiz FROM STUDENT_IN_COURSE LEFT JOIN QUIZ USING ( course ) LEFT JOIN ATTEMPT ON (STUDENT_IN_COURSE.student = ATTEMPT.student AND QUIZ.id = ATTEMPT.quiz) GROUP BY course, STUDENT_IN_COURSE.student ) AS tab2 USING ( student, course ) JOIN ( SELECT STUDENT_IN_COURSE.student, course, count(DISTINCT SUBMISSION.assign) AS submission, count(DISTINCT ASSIGN.id) AS assign FROM STUDENT_IN_COURSE LEFT JOIN ASSIGN USING ( course ) LEFT JOIN SUBMISSION ON (STUDENT_IN_COURSE.student = SUBMISSION.student AND ASSIGN.id = SUBMISSION.assign) GROUP BY course, STUDENT_IN_COURSE.student ) AS tab3 USING ( student, course ) JOIN ( SELECT STUDENT_IN_COURSE.student, course, count(DISTINCT SUBMISSION.assign) AS ontime, count(DISTINCT ASSIGN.id) AS assign_ FROM STUDENT_IN_COURSE LEFT JOIN ASSIGN USING ( course ) LEFT JOIN SUBMISSION ON (STUDENT_IN_COURSE.student = SUBMISSION.student AND ASSIGN.id = SUBMISSION.assign AND SUBMISSION.created <= ASSIGN.due_date) GROUP BY course, STUDENT_IN_COURSE.student ) AS tab4 USING ( student, course );",
   get_indicators: "SELECT id AS student, unlimited_quizzes, attempts, forums, posts FROM STUDENT LEFT JOIN ( SELECT STUDENT_IN_COURSE.student AS student, count(DISTINCT QUIZ.id) AS unlimited_quizzes, count(ATTEMPT.quiz) AS attempts FROM STUDENT_IN_COURSE JOIN QUIZ USING ( course ) LEFT JOIN ATTEMPT ON (QUIZ.id = ATTEMPT.quiz AND ATTEMPT.student = STUDENT_IN_COURSE.student) WHERE QUIZ.attempts_permitted IS NULL GROUP BY STUDENT_IN_COURSE.student ) AS tab1 ON (Student.id = tab1.student) LEFT JOIN ( SELECT STUDENT_IN_COURSE.student AS student, count(DISTINCT FORUM.id) AS forums, count(POST.forum) AS posts FROM STUDENT_IN_COURSE JOIN FORUM USING ( course ) LEFT JOIN POST ON (FORUM.id = POST.forum AND POST.student = STUDENT_IN_COURSE.student) GROUP BY STUDENT_IN_COURSE.student ) AS tab2 ON (Student.id = tab2.student); ",
   get_activities_in_time: "SELECT number AS week, count(created) AS activities, count(DISTINCT course) AS courses, STUDENT_IN_COURSE.student AS student FROM WEEK JOIN STUDENT_IN_COURSE LEFT JOIN ( SELECT created, student FROM STUDENT JOIN POST ON (POST.student = STUDENT.id) UNION ALL SELECT start, student FROM STUDENT JOIN ATTEMPT ON (ATTEMPT.student = STUDENT.id) UNION ALL SELECT created, student FROM STUDENT JOIN SUBMISSION ON (SUBMISSION.student = STUDENT.id) ) AS tab1 ON (tab1.student = STUDENT_IN_COURSE.student AND number = ( (created - 1602284400) / 604800) ) GROUP BY number, STUDENT_IN_COURSE.student;",
@@ -444,6 +474,5 @@ let queries_sql = {
   get_lastAccess: "SELECT id, name, avg(activities_per_course)AS weekly_activity, max(lastaccess) AS lastaccess FROM STUDENT JOIN STUDENT_IN_COURSE ON(STUDENT.id = STUDENT_IN_COURSE.student)JOIN( SELECT number AS week, count(created) / count(DISTINCT course) AS activities_per_course, STUDENT_IN_COURSE.student AS student FROM WEEK JOIN STUDENT_IN_COURSE LEFT JOIN ( SELECT created, student FROM STUDENT JOIN POST ON (POST.student = STUDENT.id) UNION ALL SELECT start, student FROM STUDENT JOIN ATTEMPT ON (ATTEMPT.student = STUDENT.id) UNION ALL SELECT created, student FROM STUDENT JOIN SUBMISSION ON (SUBMISSION.student = STUDENT.id) ) AS tab1 ON (tab1.student = STUDENT_IN_COURSE.student AND number = ( (created - 1602284400) / 604800) ) GROUP BY number, STUDENT_IN_COURSE.student ) AS tab1 USING (student) GROUP BY student",
   get_timeline_of_activities_done: "SELECT week, student, open_quizzes, closed_quizzes, done_quizzes_on_time, done_quizzes_late, open_assigns, closed_assigns, done_assigns_on_time, done_assigns_late, open_forums, closed_forums, done_forums_on_time, done_forums_late FROM ( SELECT week, student, open_quizzes, closed_quizzes, done_quizzes_on_time, done_quizzes_late FROM ( SELECT number AS week, student, count(DISTINCT QUIZ.id) AS open_quizzes FROM WEEK JOIN STUDENT_IN_COURSE LEFT JOIN QUIZ ON (STUDENT_IN_COURSE.course = QUIZ.course AND number >= (time_open - 1602284400) / 604800 AND number < (time_close - 1602284400) / 604800) GROUP BY number, STUDENT_IN_COURSE.student ) AS tab1 JOIN ( SELECT number AS week, student, count(DISTINCT QUIZ.id) AS closed_quizzes FROM WEEK JOIN STUDENT_IN_COURSE LEFT JOIN QUIZ ON (STUDENT_IN_COURSE.course = QUIZ.course AND number >= (time_close - 1602284400) / 604800) GROUP BY number, STUDENT_IN_COURSE.student ) AS tab2 USING ( week, student ) JOIN ( SELECT number AS week, STUDENT_IN_COURSE.student, count(DISTINCT attempt1.quiz) AS done_quizzes_on_time, count(DISTINCT attempt2.quiz) AS done_quizzes_late FROM WEEK JOIN STUDENT_IN_COURSE LEFT JOIN QUIZ USING ( course ) LEFT JOIN ATTEMPT AS attempt1 ON (number >= (attempt1.start - 1602284400) / 604800 AND STUDENT_IN_COURSE.student = attempt1.student AND QUIZ.id = attempt1.quiz AND attempt1.start <= QUIZ.time_close) LEFT JOIN ATTEMPT AS attempt2 ON (number >= (attempt2.start - 1602284400) / 604800 AND STUDENT_IN_COURSE.student = attempt2.student AND QUIZ.id = attempt2.quiz AND attempt2.start > QUIZ.time_close) GROUP BY number, STUDENT_IN_COURSE.student ) AS tab3 USING ( week, student ) ) AS quiz_week JOIN ( SELECT week, student, open_assigns, closed_assigns, done_assigns_on_time, done_assigns_late FROM ( SELECT number AS week, student, count(DISTINCT ASSIGN.id) AS open_assigns FROM WEEK JOIN STUDENT_IN_COURSE LEFT JOIN ASSIGN ON (STUDENT_IN_COURSE.course = ASSIGN.course AND number >= (time_open - 1602284400) / 604800 AND number < (due_date - 1602284400) / 604800) GROUP BY number, STUDENT_IN_COURSE.student ) AS tab1 JOIN ( SELECT number AS week, student, count(DISTINCT ASSIGN.id) AS closed_assigns FROM WEEK JOIN STUDENT_IN_COURSE LEFT JOIN ASSIGN ON (STUDENT_IN_COURSE.course = ASSIGN.course AND number >= (due_date - 1602284400) / 604800) GROUP BY number, STUDENT_IN_COURSE.student ) AS tab2 USING ( week, student ) JOIN ( SELECT number AS week, STUDENT_IN_COURSE.student, count(DISTINCT submission1.assign) AS done_assigns_on_time, count(DISTINCT submission2.assign) AS done_assigns_late FROM WEEK JOIN STUDENT_IN_COURSE LEFT JOIN ASSIGN USING ( course ) LEFT JOIN SUBMISSION AS submission1 ON (number >= (submission1.created - 1602284400) / 604800 AND STUDENT_IN_COURSE.student = submission1.student AND ASSIGN.id = submission1.assign AND submission1.created <= ASSIGN.due_date) LEFT JOIN SUBMISSION AS submission2 ON (number >= (submission2.created - 1602284400) / 604800 AND STUDENT_IN_COURSE.student = submission2.student AND ASSIGN.id = submission2.assign AND submission2.created > ASSIGN.due_date) GROUP BY number, STUDENT_IN_COURSE.student ) AS tab3 USING ( week, student ) ) AS assign_week USING ( week, student ) JOIN ( SELECT week, student, open_forums, closed_forums, done_forums_on_time, done_forums_late FROM ( SELECT number AS week, student, count(DISTINCT FORUM.id) AS open_forums FROM WEEK JOIN STUDENT_IN_COURSE LEFT JOIN FORUM ON (STUDENT_IN_COURSE.course = FORUM.course AND number < (due_date - 1602284400) / 604800) GROUP BY number, STUDENT_IN_COURSE.student ) AS tab1 JOIN ( SELECT number AS week, student, count(DISTINCT FORUM.id) AS closed_forums FROM WEEK JOIN STUDENT_IN_COURSE LEFT JOIN FORUM ON (STUDENT_IN_COURSE.course = FORUM.course AND number >= (due_date - 1602284400) / 604800) GROUP BY number, STUDENT_IN_COURSE.student ) AS tab2 USING ( week, student ) JOIN ( SELECT number AS week, STUDENT_IN_COURSE.student, count(DISTINCT post1.forum) AS done_forums_on_time, count(DISTINCT post2.forum) AS done_forums_late FROM WEEK JOIN STUDENT_IN_COURSE LEFT JOIN FORUM USING ( course ) LEFT JOIN POST AS post1 ON (number >= (post1.created - 1602284400) / 604800 AND STUDENT_IN_COURSE.student = post1.student AND FORUM.id = post1.forum AND post1.created <= FORUM.due_date) LEFT JOIN POST AS post2 ON (number >= (post2.created - 1602284400) / 604800 AND STUDENT_IN_COURSE.student = post2.student AND FORUM.id = post2.forum AND post2.created > FORUM.due_date) GROUP BY number, STUDENT_IN_COURSE.student ) AS tab3 USING ( week, student ) ) AS forum_week USING ( week, student );",
   get_participation_on_course: "SELECT student, name, f + q + ag AS opportunities, p + at + s AS participation FROM ( SELECT STUDENT_IN_COURSE.student, count(DISTINCT FORUM.id) AS f, count(DISTINCT POST.forum) AS p, count(DISTINCT ASSIGN.id) AS ag, count(DISTINCT SUBMISSION.assign) AS s, count(DISTINCT QUIZ.id) AS q, count(DISTINCT ATTEMPT.quiz) AS at FROM STUDENT_IN_COURSE LEFT JOIN ASSIGN USING ( course ) LEFT JOIN SUBMISSION ON (ASSIGN.id = SUBMISSION.assign AND SUBMISSION.student = STUDENT_IN_COURSE.student) LEFT JOIN FORUM USING ( course ) LEFT JOIN POST ON (FORUM.id = POST.forum AND POST.student = STUDENT_IN_COURSE.student) LEFT JOIN QUIZ USING ( course ) LEFT JOIN ATTEMPT ON (QUIZ.id = ATTEMPT.quiz AND ATTEMPT.student = STUDENT_IN_COURSE.student) WHERE course = ? GROUP BY STUDENT_IN_COURSE.student ) AS tab1 JOIN STUDENT ON (STUDENT.id = tab1.student)",
-  //TODO: Refazer com forum e quiz
-  get_timeline_info_on_course: "SELECT STUDENT_IN_COURSE.student,   ASSIGN.id AS act_id,   time_open AS start,   due_date AS [end],   created AS s_start FROM STUDENT_IN_COURSE   LEFT JOIN   ASSIGN USING (       course   )   LEFT JOIN   SUBMISSION ON (SUBMISSION.student = STUDENT_IN_COURSE.student AND                   SUBMISSION.assign = ASSIGN.id)  WHERE course = ?;"
+  get_timeline_info_on_course: "SELECT student, act_id, start, [end], s_start FROM ( SELECT STUDENT_IN_COURSE.student, QUIZ.id AS act_id, time_open AS start, time_close AS [end], finish AS s_start, course FROM STUDENT_IN_COURSE LEFT JOIN QUIZ USING ( course ) LEFT JOIN ATTEMPT ON (ATTEMPT.student = STUDENT_IN_COURSE.student AND ATTEMPT.quiz = QUIZ.id) UNION ALL SELECT STUDENT_IN_COURSE.student, ASSIGN.id AS act_id, time_open AS start, due_date AS [end], created AS s_start, course FROM STUDENT_IN_COURSE LEFT JOIN ASSIGN USING ( course ) LEFT JOIN SUBMISSION ON (SUBMISSION.student = STUDENT_IN_COURSE.student AND SUBMISSION.assign = ASSIGN.id) UNION ALL SELECT STUDENT_IN_COURSE.student, FORUM.id AS act_id, time_open AS start, due_date AS [end], created AS s_start, course FROM STUDENT_IN_COURSE LEFT JOIN FORUM USING ( course ) LEFT JOIN POST ON (POST.student = STUDENT_IN_COURSE.student AND POST.forum = FORUM.id) ) AS tab1 WHERE course = ?"
 };

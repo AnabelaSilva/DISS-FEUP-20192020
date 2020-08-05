@@ -20,15 +20,23 @@ app.get('/', (req, res) => {
   promises.push(queries.get_evaluations());
   promises.push(queries.get_lastAccess());
   promises.push(queries.get_activities_from_courses());
+  promises.push(queries.get_activities_by_week_by_course());
   Promise.all(promises).then((values) => {
-    res.render('index', { title: TITLE, histogram_data: values[0], box_data: values[1], last_access: values[2], participation_by_course: values[3] });
+    res.render('index', {
+      title: TITLE,
+      histogram_data: values[0],
+      box_data: values[1],
+      last_access: values[2],
+      participation_by_course: values[3],
+      weekly_percentage: values[4]
+    });
   });
 
 });
 app.get('/student', (req, res) => {
   let promises = [];
-  if(req.query.id == null){
-    res.status(404).render('student404', { title: TITLE});
+  if (req.query.id == null) {
+    res.status(404).render('student404', { title: TITLE });
   }
   let student_id = Number(req.query.id);
   promises.push(queries.get_student(student_id));
@@ -39,8 +47,8 @@ app.get('/student', (req, res) => {
   promises.push(queries.get_indicators(student_id));
   promises.push(queries.get_timeline_of_activities_done(student_id));
   Promise.all(promises).then((values) => {
-    if(values[0]== undefined){
-      res.status(404).render('student404', { title: TITLE});
+    if (values[0] == undefined) {
+      res.status(404).render('student404', { title: TITLE });
     }
     res.render('student', { title: TITLE, student: values[0], percentages_data: values[1], grades_data: values[2], students_courses: values[3], weekly_activities: values[4], indicators: values[5], timeline_info: values[6] });
   });
@@ -48,16 +56,16 @@ app.get('/student', (req, res) => {
 
 app.get('/course', (req, res) => {
   let promises = [];
-  if(req.query.id == null){
-    res.status(404).render('course404', { title: TITLE});
+  if (req.query.id == null) {
+    res.status(404).render('course404', { title: TITLE });
   }
   let course_id = Number(req.query.id);
   promises.push(queries.get_course_info(course_id));
   promises.push(queries.get_participation_on_course(course_id));
   promises.push(queries.get_timeline_info_on_course(course_id));
   Promise.all(promises).then((values) => {
-    if(values[0]== undefined){
-      res.status(404).render('course404', { title: TITLE});
+    if (values[0] == undefined) {
+      res.status(404).render('course404', { title: TITLE });
     }
     res.render('course', { title: TITLE, course: values[0], participation_info: values[1], timeline_info: values[2] });
   });
@@ -74,8 +82,8 @@ app.get('/dummy', (req, res) => {
   });
 });
 //Capture All 404 errors
-app.use(function (req,res,next){
-	res.status(404).render('404',{ title: TITLE});
+app.use(function (req, res, next) {
+  res.status(404).render('404', { title: TITLE });
 });
 const server = app.listen(7000, () => {
   console.log(`Express running → PORT ${server.address().port}`);

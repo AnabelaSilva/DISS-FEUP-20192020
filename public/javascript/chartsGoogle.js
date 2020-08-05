@@ -578,8 +578,48 @@ function drawTimelineDisplay() {
     let chart = new google.visualization.LineChart(document.getElementById('timeline_plot'));
     chart.draw(data, options);
 }
+function draw_weekly_percentage() {
+    let data_p = [];
+    let data = new google.visualization.DataTable();
+    // Declare columns
+    data.addColumn('number', 'Week');
+    let columns = [];
+    weekly_percentage[0].courses.forEach(element => {
+        if(element!=null){
+            data.addColumn('number', element.course);
+            columns.push(element.course);
+        }
+    });
+    weekly_percentage.forEach(element => {
+        let data_point = [];
 
-
+        data_point.push(element.week);
+        columns.forEach(elem => {
+            data_point.push(100*element.courses[elem].done_activities/element.courses[elem].activities);
+        });
+        data_p.push(data_point);
+    });
+    // Add data.
+    data.addRows(data_p);
+    let options = {
+        title: "Percentage of activities done(posts, quizzes attempts and submissions) until week",
+        vAxis: {
+            title: 'Percentage of activities',
+            maxValue:100
+        },
+        height: height,
+        width: width,
+        hAxis: {
+            title: 'Week of the semester'
+        },
+        focusTarget: 'category',
+        legend: {
+            position: 'top'
+        },
+    };
+    let chart = new google.visualization.LineChart(document.getElementById('weekly_percentage'));
+    chart.draw(data, options);
+}
 function changecursorPOINTER(e) {
     document.body.style.cursor = 'pointer';
 }
