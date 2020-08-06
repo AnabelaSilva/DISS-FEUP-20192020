@@ -647,6 +647,57 @@ function changecursorDEFAULT(e) {
     document.body.style.cursor = 'default';
 }
 
+function draw_C_weekly_percentage() {
+    let data_p = [];
+    let data = new google.visualization.DataTable();
+    // Declare columns
+    data.addColumn('number', 'Week');
+    data.addColumn('number', course.name);
+    data.addColumn('number', 'Average Course');
+
+    let columns = [];
+    console.log(week_info);
+    week_info[0].courses.forEach(element => {
+        if (element != null) {
+            columns.push(element.course);
+        }
+    });
+    week_info.forEach(element => {
+        let data_point = [];
+        data_point.push(element.week);
+        let done_activities = 0;
+        let activities = 0;
+        columns.forEach(elem => {
+            done_activities += element.courses[elem].done_activities;
+            activities += element.courses[elem].activities;
+            if (elem == course.id) {
+                data_point.push(100 * element.courses[elem].done_activities / element.courses[elem].activities);
+            }
+        });
+        data_point.push(100 * done_activities / activities);
+        data_p.push(data_point);
+    });
+    // Add data.
+    data.addRows(data_p);
+    let options = {
+        title: "Percentage of activities done(posts, quizzes attempts and submissions) until week",
+        vAxis: {
+            title: 'Percentage of activities',
+            maxValue: 100
+        },
+        height: height,
+        width: width,
+        hAxis: {
+            title: 'Week of the semester'
+        },
+        focusTarget: 'category',
+        legend: {
+            position: 'top'
+        },
+    };
+    let chart = new google.visualization.LineChart(document.getElementById('weekly_plot'));
+    chart.draw(data, options);
+}
 function draw_C_evaluations() {
     let data_p = [];
     //  TOOLTIP

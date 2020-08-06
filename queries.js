@@ -2,6 +2,36 @@ const { db } = require("./database.js");
 const d3 = require('d3');
 const percentRank = require('percentile-rank');
 
+
+function get_activities_by_week_by_course() {
+  let sql = queries_sql.get_activities_by_week_by_course;
+  let params = [];
+  let promise = new Promise((resolve, reject) => {
+    db.all(sql, params,
+      function (err, rows) {
+        if (err) {
+          console.error(err);
+          console.trace();
+          return err;
+        }
+        let aux = []
+        rows.forEach(element => {
+          if (aux[element.week] == undefined) {
+            aux[element.week] = { week: element.week, courses: [] };
+          }
+          if (aux[element.week].courses[element.course] == undefined) {
+            aux[element.week].courses[element.course] = { course: element.course, activities: 0, done_activities: 0 };
+          }
+          aux[element.week].courses[element.course].activities += element.quizzes + element.forums + element.assigns;
+          aux[element.week].courses[element.course].done_activities += element.done_quizzes + element.done_forums + element.done_assigns;
+        });
+        resolve(aux);
+      }
+    );
+  });
+  return promise;
+}
+
 function get_activities_from_all_students() {
   let sql = queries_sql.percentage_of_activities_per_opportunities;
   let params = [];
@@ -411,34 +441,7 @@ function get_timeline_info_on_course(course_id) {
   });
   return promise;
 }
-function get_activities_by_week_by_course() {
-  let sql = queries_sql.get_activities_by_week_by_course;
-  let params = [];
-  let promise = new Promise((resolve, reject) => {
-    db.all(sql, params,
-      function (err, rows) {
-        if (err) {
-          console.error(err);
-          console.trace();
-          return err;
-        }
-        let aux = []
-        rows.forEach(element => {
-          if (aux[element.week] == undefined) {
-            aux[element.week] = { week: element.week, courses: [] };
-          }
-          if (aux[element.week].courses[element.course] == undefined) {
-            aux[element.week].courses[element.course] = { course: element.course, activities: 0, done_activities: 0 };
-          }
-          aux[element.week].courses[element.course].activities += element.quizzes + element.forums + element.assigns;
-          aux[element.week].courses[element.course].done_activities += element.done_quizzes + element.done_forums + element.done_assigns;
-        });
-        resolve(aux);
-      }
-    );
-  });
-  return promise;
-}
+
 function get_evaluations_from_course(course_id) {
   let sql = queries_sql.get_evaluations_from_course;
   let params = [course_id];
