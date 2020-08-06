@@ -45,7 +45,7 @@ function draw_participation_on_course() {
         }
     }
     google.visualization.events.addListener(chart, 'select', selectHandler);
-    
+
     google.visualization.events.addListener(chart, 'onmouseover', changecursorPOINTER);
     google.visualization.events.addListener(chart, 'onmouseout', changecursorDEFAULT);
 
@@ -193,13 +193,27 @@ function drawBoxAndWhiskers() {
                 style: 'bars'
             }
         },
+
         dataOpacity: 0
 
     };
     let chart = new google.visualization.ColumnChart(document.getElementById('box_plot'));
 
     chart.draw(data, options);
+    // The select handler. Call the chart's getSelection() method
+    function selectHandler() {
+        var selectedItem = chart.getSelection()[0];
+        if (selectedItem) {
+            console.log(selectedItem);
+            //window.location.href = "/student?id=" + participation_info[selectedItem.row][0];
+        }
+    }
     d3.selectAll('#box_plot').selectAll('g[clip-path] > g:nth-child(2)').raise();
+    d3.selectAll('#box_plot > div > div:nth-child(1) > div > svg > g:nth-child(4) > g:nth-child(4) text[text-anchor="middle"]').on('click', clickHandler).style('cursor', 'pointer');
+
+    function clickHandler() {
+        window.location.href = "/course?id=" + this.innerHTML;
+    }
 
 }
 function drawCoursesDisplay() {
@@ -242,10 +256,7 @@ function drawCoursesDisplay() {
             res[3].push(null, null, null, null, null, null, "No assignments currently available!")
         } else {
             res[3].push(element.ontime.values[0], element.ontime.values[1], element.ontime.values[2], element.ontime.values[3], element.ontime.values[4], element.ontime.values[5], element.name + ":\n\tMax: " + element.ontime.values[5].toFixed(1) + "\n\tQ3: " + element.ontime.values[4].toFixed(1) + "\n\tMedian: " + element.ontime.values[3].toFixed(1) + "\n\tQ1: " + element.ontime.values[2].toFixed(1) + "\n\tMin: " + element.ontime.values[1].toFixed(1));
-        }   //res[0] = res[0].concat(element.forums.values);
-        // res[1] = res[1].concat(element.quizzes.values);
-        // res[2] = res[2].concat(element.assigns.values);
-        // res[3] = res[3].concat(element.ontime.values);
+        }
     });
     // Add data.
     data.addRows(res);
@@ -280,6 +291,18 @@ function drawCoursesDisplay() {
         }
     };
     let chart = new google.visualization.ColumnChart(document.getElementById('courses_plot'));
+    // The select handler. Call the chart's getSelection() method
+    function selectHandler() {
+        var selectedItem = chart.getSelection()[0];
+        if (selectedItem) {
+            console.log(selectedItem);
+            window.location.href = "/course?id=" + data.getColumnLabel(selectedItem.column);
+        }
+    }
+    google.visualization.events.addListener(chart, 'select', selectHandler);
+
+    google.visualization.events.addListener(chart, 'onmouseover', changecursorPOINTER);
+    google.visualization.events.addListener(chart, 'onmouseout', changecursorDEFAULT);
     chart.draw(data, options);
     d3.selectAll('#courses_plot').selectAll('g[clip-path] > g:nth-child(2)').raise();
 }
@@ -411,20 +434,20 @@ function drawLastDays() {
             options.sortAscending = e.ascending;
             table.draw(view, options);
         }
-        d3.selectAll('#lastaccess_plot').selectAll('table').style('cursor','pointer');
+        d3.selectAll('#lastaccess_plot').selectAll('table').style('cursor', 'pointer');
 
     }
 
     google.visualization.events.addListener(table, 'select', selectHandler);
     google.visualization.events.addListener(table, 'sort', sortHandler);
 
-    
+
     let view = new google.visualization.DataView(data);
 
     view.setColumns([1, 2, 3]);
     table.draw(view, options);
 
-    d3.selectAll('#lastaccess_plot').selectAll('table').style('cursor','pointer');
+    d3.selectAll('#lastaccess_plot').selectAll('table').style('cursor', 'pointer');
 }
 function drawGradesTable() {
     let data_p = [];
@@ -543,7 +566,7 @@ function drawTimelineDisplay() {
         data_p.push(
             [
                 element.week,
-                100 * element.student.done_activities/ element.student.all_activities,
+                100 * element.student.done_activities / element.student.all_activities,
                 100 * element.average,
 
             ]
@@ -561,7 +584,7 @@ function drawTimelineDisplay() {
         title: "Percentage of activities done(posts, quizzes attempts and submissions) until week",
         vAxis: {
             title: 'Percentage of activities',
-            maxValue:100
+            maxValue: 100
         },
         height: height,
         width: width,
@@ -582,7 +605,7 @@ function draw_weekly_percentage() {
     data.addColumn('number', 'Week');
     let columns = [];
     weekly_percentage[0].courses.forEach(element => {
-        if(element!=null){
+        if (element != null) {
             data.addColumn('number', element.course);
             columns.push(element.course);
         }
@@ -592,7 +615,7 @@ function draw_weekly_percentage() {
 
         data_point.push(element.week);
         columns.forEach(elem => {
-            data_point.push(100*element.courses[elem].done_activities/element.courses[elem].activities);
+            data_point.push(100 * element.courses[elem].done_activities / element.courses[elem].activities);
         });
         data_p.push(data_point);
     });
@@ -602,7 +625,7 @@ function draw_weekly_percentage() {
         title: "Percentage of activities done(posts, quizzes attempts and submissions) until week",
         vAxis: {
             title: 'Percentage of activities',
-            maxValue:100
+            maxValue: 100
         },
         height: height,
         width: width,
@@ -628,7 +651,7 @@ function draw_C_evaluations() {
     let data_p = [];
     //  TOOLTIP
     //  element.name + ":\n\tMax: " + element.max + "\n\tQ3: " + element.Q3 + "\n\tMedian: " + element.median + "\n\tQ1: " + element.Q1 + "\n\tMin: " + element.min);
-   
+
     grades_info.forEach(element => {
         let eval_row = [];
         eval_row.push(element.name);
@@ -682,6 +705,5 @@ function draw_C_evaluations() {
     let chart = new google.visualization.LineChart(document.getElementById('evaluations_plot'));
 
     chart.draw(data, options);
-    d3.selectAll('#box_plot').selectAll('g[clip-path] > g:nth-child(2)').raise();
 
 }
