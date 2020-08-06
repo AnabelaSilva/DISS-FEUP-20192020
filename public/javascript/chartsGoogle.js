@@ -51,7 +51,7 @@ function draw_participation_on_course() {
 
     chart.draw(data, options);
 }
-function draw_timeline_on_course() {
+function draw_C_timeline_on_course() {
     let data = new google.visualization.DataTable();
 
     data.addColumn('string', 'Row');
@@ -646,7 +646,6 @@ function changecursorPOINTER(e) {
 function changecursorDEFAULT(e) {
     document.body.style.cursor = 'default';
 }
-
 function draw_C_weekly_percentage() {
     let data_p = [];
     let data = new google.visualization.DataTable();

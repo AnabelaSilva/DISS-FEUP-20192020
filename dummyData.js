@@ -177,10 +177,10 @@ function createDummyData() {
                     [].concat.apply([], courses.map((x) => [x['id'], x['name'], x['code']])))
                 .run('INSERT INTO Student_in_Course (student, course, lastaccess) VALUES ' + students_in_courses.map((x) => '(?,?,?)').join(',') + ';',
                     [].concat.apply([], students_in_courses.map((x) => [x['student'], x['course'], x['lastaccess']])))
-                .run('INSERT INTO Forum (id, course, due_date, time_open) VALUES ' + types_of_activities.forums.map((x) => '(?,?,?,?)').join(',') + ';',
+                .run('INSERT INTO Forum (id, course, time_close, time_open) VALUES ' + types_of_activities.forums.map((x) => '(?,?,?,?)').join(',') + ';',
                     [].concat.apply([], types_of_activities.forums.map((x) => [x['id'], x['course'], x['duedate'],x.time_open])))
-                .run('INSERT INTO Assign (id, course, time_open, due_date) VALUES ' + types_of_activities.assigns.map((x) => '(?,?,?,?)').join(',') + ';',
-                    [].concat.apply([], types_of_activities.assigns.map((x) => [x['id'], x['course'], x['time_open'], x['due_date']])))
+                .run('INSERT INTO Assign (id, course, time_open, time_close) VALUES ' + types_of_activities.assigns.map((x) => '(?,?,?,?)').join(',') + ';',
+                    [].concat.apply([], types_of_activities.assigns.map((x) => [x['id'], x['course'], x['time_open'], x['time_close']])))
                 .run('INSERT INTO Quiz (id, course, attempts_permitted,time_open,time_close) VALUES ' + types_of_activities.quizzes.map((x) => '(?,?,?,?,?)').join(',') + ';',
                     [].concat.apply([], types_of_activities.quizzes.map((x) => [x['id'], x['course'], x['attempts'], x['time_open'], x['time_close']])))
                 .run('INSERT INTO Post (student, forum, created, type) VALUES ' + activities.posts.map((x) => '(?,?,?,?)').join(',') + ';',
@@ -289,7 +289,7 @@ function SeparedteTopics(topics,types_of_activities) {
                     id: element.id,
                     course: element.course,
                     time_open: Math.floor(Math.floor(beginDate.getTime() + element.start * 1000 * 60 * 60 * 24) / 1000),
-                    due_date: Math.floor(Math.floor(beginDate.getTime() + element.end * 1000 * 60 * 60 * 24) / 1000)
+                    time_close: Math.floor(Math.floor(beginDate.getTime() + element.end * 1000 * 60 * 60 * 24) / 1000)
                 });
                 break;
             default:
