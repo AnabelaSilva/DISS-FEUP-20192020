@@ -57,15 +57,17 @@ function draw_C_timeline_on_course() {
     data.addColumn('string', 'Row');
     data.addColumn('string', 'Bar');
     //data.addColumn('string', 'Tooltip');
+    
     data.addColumn('datetime', 'Start');
     data.addColumn('datetime', 'End');
 
+    // data.addColumn('number', 'Start');
+    // data.addColumn('number', 'End');
+
     let aux = [];
     timeline_info.forEach(element => {
-        aux.push(['Assign', '' + element.id, new Date(element.start * 1000), new Date(element.end * 1000)]);
-        element.students.forEach(ele => {
-            aux.push(['Assign', '' + element.id, ele.start == null ? null : new Date(ele.start * 1000), ele.end == null ? null : new Date(ele.end * 1000)]);
-        });
+        // aux.push(['n',element.done+'',element.week_start,element.week_end]);
+        aux.push(['n',element.done+'',element.time_open,element.time_close]);
     });
     // Add data.
     data.addRows(aux);
