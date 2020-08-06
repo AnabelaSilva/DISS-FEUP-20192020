@@ -67,8 +67,6 @@ function draw_timeline_on_course() {
             aux.push(['Assign', '' + element.id, ele.start == null ? null : new Date(ele.start * 1000), ele.end == null ? null : new Date(ele.end * 1000)]);
         });
     });
-
-    console.log(aux);
     // Add data.
     data.addRows(aux);
     var options = {
@@ -250,7 +248,6 @@ function drawCoursesDisplay() {
         // res[3] = res[3].concat(element.ontime.values);
     });
     // Add data.
-    console.log(res);
     data.addRows(res);
     let options = {
         title: "Compare the courses by the percentages of participation",
@@ -625,4 +622,66 @@ function changecursorPOINTER(e) {
 }
 function changecursorDEFAULT(e) {
     document.body.style.cursor = 'default';
+}
+
+function draw_C_evaluations() {
+    let data_p = [];
+    //  TOOLTIP
+    //  element.name + ":\n\tMax: " + element.max + "\n\tQ3: " + element.Q3 + "\n\tMedian: " + element.median + "\n\tQ1: " + element.Q1 + "\n\tMin: " + element.min);
+   
+    grades_info.forEach(element => {
+        let eval_row = [];
+        eval_row.push(element.name);
+        eval_row = eval_row.concat(element.students_values);
+        eval_row.push(element.min, element.Q1, element.median, element.Q3, element.max);
+        data_p.push(eval_row);
+    });
+
+    let data = new google.visualization.DataTable();
+
+    // Declare columns
+    data.addColumn('string', 'Evaluation');
+    for (let index = 0; index < grades_info[0].students_values.length; index++) {
+        data.addColumn('number', 'Student');
+    }
+    data.addColumn({ id: 'min', type: 'number', role: 'interval' });
+    data.addColumn({ id: 'firstQuartile', type: 'number', role: 'interval' });
+    data.addColumn({ id: 'median', type: 'number', role: 'interval' });
+    data.addColumn({ id: 'thirdQuartile', type: 'number', role: 'interval' });
+    data.addColumn({ id: 'max', type: 'number', role: 'interval' });
+    // Add data.
+    console.log(data_p);
+    data.addRows(data_p);
+    let options = {
+        title: "Distribution of the students' grades in each evaluation activity",
+        vAxis: {
+            title: 'Grades'
+        },
+        height: height,
+        width: width,
+        legend: { position: 'none' },
+        tooltip: { isHtml: true },
+        lineWidth: 0,
+        pointSize: 3,
+        intervals: {
+            barWidth: 1,
+            boxWidth: 1,
+            lineWidth: 1,
+            style: 'boxes'
+        },
+        focusTarget: 'category',
+        interval: {
+            max: {
+                style: 'bars'
+            },
+            min: {
+                style: 'bars'
+            }
+        },
+    };
+    let chart = new google.visualization.LineChart(document.getElementById('evaluations_plot'));
+
+    chart.draw(data, options);
+    d3.selectAll('#box_plot').selectAll('g[clip-path] > g:nth-child(2)').raise();
+
 }

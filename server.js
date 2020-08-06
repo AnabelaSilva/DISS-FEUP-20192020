@@ -63,11 +63,18 @@ app.get('/course', (req, res) => {
   promises.push(queries.get_course_info(course_id));
   promises.push(queries.get_participation_on_course(course_id));
   promises.push(queries.get_timeline_info_on_course(course_id));
+  promises.push(queries.get_evaluations_from_course(course_id));
   Promise.all(promises).then((values) => {
     if (values[0] == undefined) {
       res.status(404).render('course404', { title: TITLE });
     }
-    res.render('course', { title: TITLE, course: values[0], participation_info: values[1], timeline_info: values[2] });
+    res.render('course', {
+      title: TITLE,
+      course: values[0],
+      participation_info: values[1],
+      timeline_info: values[2],
+      grades_info: values[3],
+    });
   });
 });
 app.get('/reload', (req, res) => {

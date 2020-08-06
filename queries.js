@@ -394,9 +394,6 @@ function get_timeline_info_on_course(course_id) {
 
         rows.forEach(elem => {
           let index = res.find(element => element.id == elem.act_id);
-
-          console.log(elem);
-          console.log(index);
           if (index == undefined) {
             index = res[res.push({ id: elem.act_id, start: elem.start, end: elem.end, students: [], not_done: 0 }) - 1];
           }
@@ -442,6 +439,52 @@ function get_activities_by_week_by_course() {
   });
   return promise;
 }
+function get_evaluations_from_course(course_id) {
+  let sql = queries_sql.get_evaluations_from_course;
+  let params = [course_id];
+  let promise = new Promise((resolve, reject) => {
+    db.all(sql, params,
+      function (err, rows) {
+        if (err) {
+          console.error(err);
+          console.trace();
+          return err;
+        }
+        let aux = [];
+        let students_ids = [];
+        let eval_ids = [];
+        rows.forEach(element => {
+          let index_eval = eval_ids.indexOf(element.eval_id);
+          if (index_eval == -1) {
+            index_eval = eval_ids.push(element.eval_id) - 1;
+          }
+          if (aux[index_eval] == undefined) {
+            aux[index_eval] = { name: element.eval_name, data: [], students_values: [] };
+          }
+          let index = students_ids.indexOf(element.student);
+          if (index == -1) {
+            index = students_ids.push(element.student) - 1;
+          }
+          aux[index_eval].students_values[index] = element.value;
+          if (element.value != null) {
+            aux[index_eval].data.push(element.value);
+          }
+        });
+        aux.forEach(element => {
+          element.data.sort(function (a, b) { return a - b });
+          element.min = d3.quantile(element.data, 0);
+          element.Q1 = d3.quantile(element.data, 0.25);
+          element.median = d3.quantile(element.data, 0.5);
+          element.Q3 = d3.quantile(element.data, 0.75);
+          element.max = d3.quantile(element.data, 1);
+          element.data = null;
+        });
+        resolve(aux);
+      }
+    );
+  });
+  return promise;
+}
 module.exports = {
   get_course_info: get_course_info,
   get_participation_on_course: get_participation_on_course,
@@ -457,11 +500,13 @@ module.exports = {
   get_timeline_of_activities_done: get_timeline_of_activities_done,
   get_timeline_info_on_course: get_timeline_info_on_course,
   get_activities_by_week_by_course: get_activities_by_week_by_course,
+  get_evaluations_from_course: get_evaluations_from_course,
 };
 
 let queries_sql = {
 
   get_course_info: "SELECT * FROM COURSE WHERE id = ?;",
+  get_evaluations_from_course: "SELECT         STUDENT_IN_COURSE.student AS student,        EVALUATION.id AS eval_id,        EVALUATION.name AS eval_name,        value   FROM STUDENT_IN_COURSE        LEFT JOIN        EVALUATION USING (            course        )        LEFT JOIN        GRADE ON (GRADE.evaluation = EVALUATION.id AND                   STUDENT_IN_COURSE.student = GRADE.student)         JOIN        COURSE ON (STUDENT_IN_COURSE.course = COURSE.id)        WHERE course = ?; ",
   get_activities_by_week_by_course: "SELECT number AS week,        STUDENT_IN_COURSE.course,        STUDENT_IN_COURSE.student,        count(DISTINCT QUIZ.id) AS quizzes,        count(DISTINCT ASSIGN.id) AS assigns,        count(DISTINCT FORUM.id) AS forums,        count(DISTINCT post1.forum) AS done_forums,        count(DISTINCT submission1.assign) AS done_assigns,        count(DISTINCT attempt1.quiz) AS done_quizzes   FROM WEEK        LEFT JOIN        STUDENT_IN_COURSE        LEFT JOIN        QUIZ ON (STUDENT_IN_COURSE.course = QUIZ.course AND                  number >= (QUIZ.time_open - 1602284400) / 604800)         LEFT JOIN        FORUM ON (STUDENT_IN_COURSE.course = FORUM.course AND                   number >= (FORUM.time_open - 1602284400) / 604800)         LEFT JOIN        ASSIGN ON (STUDENT_IN_COURSE.course = ASSIGN.course AND                    number >= (ASSIGN.time_open - 1602284400) / 604800)         LEFT JOIN        ATTEMPT AS attempt1 ON (number >= (attempt1.start - 1602284400) / 604800 AND                                 STUDENT_IN_COURSE.student = attempt1.student AND                                 QUIZ.id = attempt1.quiz)         LEFT JOIN        SUBMISSION AS submission1 ON (number >= (submission1.created - 1602284400) / 604800 AND                                       STUDENT_IN_COURSE.student = submission1.student AND                                       ASSIGN.id = submission1.assign)         LEFT JOIN        POST AS post1 ON (number >= (post1.created - 1602284400) / 604800 AND                           STUDENT_IN_COURSE.student = post1.student AND                           FORUM.id = post1.forum)   GROUP BY number,           STUDENT_IN_COURSE.student,           STUDENT_IN_COURSE.course; ",
   get_activities_from_courses: "SELECT student, course, forum, post, attempt, quiz, submission, assign, ontime, code FROM COURSE JOIN ( SELECT STUDENT_IN_COURSE.student, course, count(DISTINCT POST.forum) AS post, count(DISTINCT FORUM.id) AS forum FROM STUDENT_IN_COURSE LEFT JOIN FORUM USING ( course ) LEFT JOIN POST ON (STUDENT_IN_COURSE.student = POST.student AND FORUM.id = POST.forum) GROUP BY course, STUDENT_IN_COURSE.student ) AS tab1 ON (course = COURSE.id) JOIN ( SELECT STUDENT_IN_COURSE.student, course, count(DISTINCT ATTEMPT.quiz) AS attempt, count(DISTINCT QUIZ.id) AS quiz FROM STUDENT_IN_COURSE LEFT JOIN QUIZ USING ( course ) LEFT JOIN ATTEMPT ON (STUDENT_IN_COURSE.student = ATTEMPT.student AND QUIZ.id = ATTEMPT.quiz) GROUP BY course, STUDENT_IN_COURSE.student ) AS tab2 USING ( student, course ) JOIN ( SELECT STUDENT_IN_COURSE.student, course, count(DISTINCT SUBMISSION.assign) AS submission, count(DISTINCT ASSIGN.id) AS assign FROM STUDENT_IN_COURSE LEFT JOIN ASSIGN USING ( course ) LEFT JOIN SUBMISSION ON (STUDENT_IN_COURSE.student = SUBMISSION.student AND ASSIGN.id = SUBMISSION.assign) GROUP BY course, STUDENT_IN_COURSE.student ) AS tab3 USING ( student, course ) JOIN ( SELECT STUDENT_IN_COURSE.student, course, count(DISTINCT SUBMISSION.assign) AS ontime, count(DISTINCT ASSIGN.id) AS assign_ FROM STUDENT_IN_COURSE LEFT JOIN ASSIGN USING ( course ) LEFT JOIN SUBMISSION ON (STUDENT_IN_COURSE.student = SUBMISSION.student AND ASSIGN.id = SUBMISSION.assign AND SUBMISSION.created <= ASSIGN.due_date) GROUP BY course, STUDENT_IN_COURSE.student ) AS tab4 USING ( student, course );",
   get_indicators: "SELECT id AS student, unlimited_quizzes, attempts, forums, posts FROM STUDENT LEFT JOIN ( SELECT STUDENT_IN_COURSE.student AS student, count(DISTINCT QUIZ.id) AS unlimited_quizzes, count(ATTEMPT.quiz) AS attempts FROM STUDENT_IN_COURSE JOIN QUIZ USING ( course ) LEFT JOIN ATTEMPT ON (QUIZ.id = ATTEMPT.quiz AND ATTEMPT.student = STUDENT_IN_COURSE.student) WHERE QUIZ.attempts_permitted IS NULL GROUP BY STUDENT_IN_COURSE.student ) AS tab1 ON (Student.id = tab1.student) LEFT JOIN ( SELECT STUDENT_IN_COURSE.student AS student, count(DISTINCT FORUM.id) AS forums, count(POST.forum) AS posts FROM STUDENT_IN_COURSE JOIN FORUM USING ( course ) LEFT JOIN POST ON (FORUM.id = POST.forum AND POST.student = STUDENT_IN_COURSE.student) GROUP BY STUDENT_IN_COURSE.student ) AS tab2 ON (Student.id = tab2.student); ",
