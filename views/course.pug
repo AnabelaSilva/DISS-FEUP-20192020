@@ -7,17 +7,20 @@ block content
         let timeline_info = !{JSON.stringify(timeline_info)};
         let grades_info = !{JSON.stringify(grades_info)};
         let week_info = !{JSON.stringify(week_info)};
+        let box_plot_info = !{JSON.stringify(box_plot_info)};
 
         function drawALL() {
             draw_C_weekly_percentage();
-            draw_participation_on_course();
+            draw_C_participation_on_course();
             draw_C_timeline_on_course();
             draw_C_evaluations();
+            draw_C_activities_dist();
         }
     
     div(class="content")
         p Course: #{course.name}
         div(class="grid-container")
+            div(id="type_plot")
             div(id="weekly_plot")
             div(id="participation_on_course_plot")
             div(id="timeline_on_course_plot")

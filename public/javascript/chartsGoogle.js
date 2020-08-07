@@ -7,7 +7,7 @@ google.charts.load('current', { 'packages': ['corechart', 'table', 'timeline'] }
 // Set a callback to run when the Google Visualization API is loaded.
 google.charts.setOnLoadCallback(drawALL);
 
-function draw_participation_on_course() {
+function draw_C_participation_on_course() {
     let data = new google.visualization.DataTable();
 
     data.addColumn({ id: 'Student', type: 'string' });
@@ -51,8 +51,6 @@ function draw_participation_on_course() {
 
     chart.draw(data, options);
 }
-
-
 function draw_S_activities_in_timeline() {
     let data = new google.visualization.DataTable();
 
@@ -65,13 +63,13 @@ function draw_S_activities_in_timeline() {
 
     let aux = [];
     proposed_act.forEach(element => {
-        let tooltip = '<p> Done on' +  new Date(element.done * 1000).toDateString() +'<br>' +
+        let tooltip = '<p> Done on' + new Date(element.done * 1000).toDateString() + '<br>' +
             new Date(element.time_open * 1000).toDateString() + ' to ' + new Date(element.time_close * 1000).toDateString() + '<br>Week ' +
             element.week_start + ' to ' + element.week_end + '</p>';
         aux.push(
             [
-                element.course+'',
-                element.done != null ? (element.done > element.time_close  ? "Late" : "Done") : "Missing",
+                element.course + '',
+                element.done != null ? (element.done > element.time_close ? "Late" : "Done") : "Missing",
                 tooltip,
                 new Date(element.time_open * 1000),
                 new Date(element.time_close * 1000)
@@ -266,7 +264,7 @@ function drawBoxAndWhiskers() {
     }
 
 }
-function drawCoursesDisplay() {
+function draw_P_CoursesDisplay() {
     let data = new google.visualization.DataTable();
     let res = [
         ['Participated Forums'],
@@ -752,7 +750,7 @@ function draw_C_evaluations() {
     //  TOOLTIP
     //  element.name + ":\n\tMax: " + element.max + "\n\tQ3: " + element.Q3 + "\n\tMedian: " + element.median + "\n\tQ1: " + element.Q1 + "\n\tMin: " + element.min);
 
-    grades_info.forEach(element => {
+    grades_info.data.forEach(element => {
         let eval_row = [];
         eval_row.push(element.name);
         eval_row = eval_row.concat(element.students_values);
@@ -761,19 +759,16 @@ function draw_C_evaluations() {
     });
 
     let data = new google.visualization.DataTable();
-
-    // Declare columns
     data.addColumn('string', 'Evaluation');
-    for (let index = 0; index < grades_info[0].students_values.length; index++) {
-        data.addColumn('number', 'Student');
+    for (let index = 0; index < grades_info.students_ids.length; index++) {
+        let name = participation_info[participation_info.findIndex((x) => { return x[0] == grades_info.students_ids[index] })][1];
+        data.addColumn('number', name);
     }
     data.addColumn({ id: 'min', type: 'number', role: 'interval' });
     data.addColumn({ id: 'firstQuartile', type: 'number', role: 'interval' });
     data.addColumn({ id: 'median', type: 'number', role: 'interval' });
     data.addColumn({ id: 'thirdQuartile', type: 'number', role: 'interval' });
     data.addColumn({ id: 'max', type: 'number', role: 'interval' });
-    // Add data.
-    console.log(data_p);
     data.addRows(data_p);
     let options = {
         title: "Distribution of the students' grades in each evaluation activity",
@@ -792,7 +787,7 @@ function draw_C_evaluations() {
             lineWidth: 1,
             style: 'boxes'
         },
-        focusTarget: 'category',
+        // focusTarget: 'category',
         interval: {
             max: {
                 style: 'bars'
@@ -803,6 +798,54 @@ function draw_C_evaluations() {
         },
     };
     let chart = new google.visualization.LineChart(document.getElementById('evaluations_plot'));
+
+    chart.draw(data, options);
+
+}
+function draw_C_activities_dist() {
+    //  TOOLTIP
+    //  element.name + ":\n\tMax: " + element.max + "\n\tQ3: " + element.Q3 + "\n\tMedian: " + element.median + "\n\tQ1: " + element.Q1 + "\n\tMin: " + element.min);
+
+    let data = new google.visualization.DataTable();
+    data.addColumn('string', 'Type');
+    for (let index = 0; index < box_plot_info.students_ids.length; index++) {
+        let name = participation_info[participation_info.findIndex((x) => { return x[0] == grades_info.students_ids[index] })][1];
+        data.addColumn('number', name);
+    }
+    data.addColumn({ id: 'min', type: 'number', role: 'interval' });
+    data.addColumn({ id: 'firstQuartile', type: 'number', role: 'interval' });
+    data.addColumn({ id: 'median', type: 'number', role: 'interval' });
+    data.addColumn({ id: 'thirdQuartile', type: 'number', role: 'interval' });
+    data.addColumn({ id: 'max', type: 'number', role: 'interval' });
+    console.log(box_plot_info.data);
+    data.addRows(box_plot_info.data);
+    let options = {
+        title: "TTTTTTTTTT", //TODO:
+        vAxis: {
+            title: 'Percentages'
+        },
+        height: height,
+        width: width,
+        legend: { position: 'none' },
+        tooltip: { isHtml: true },
+        lineWidth: 1,
+        pointSize: 3,
+        intervals: {
+            barWidth: 1,
+            boxWidth: 1,
+            lineWidth: 1,
+            style: 'boxes'
+        },
+        interval: {
+            max: {
+                style: 'bars'
+            },
+            min: {
+                style: 'bars'
+            }
+        },
+    };
+    let chart = new google.visualization.LineChart(document.getElementById('type_plot'));
 
     chart.draw(data, options);
 
