@@ -51,29 +51,77 @@ function draw_participation_on_course() {
 
     chart.draw(data, options);
 }
-function draw_C_timeline_on_course() {
+
+
+function draw_S_activities_in_timeline() {
     let data = new google.visualization.DataTable();
 
     data.addColumn('string', 'Row');
     data.addColumn('string', 'Bar');
-    //data.addColumn('string', 'Tooltip');
-    
+    data.addColumn({ type: 'string', role: 'tooltip' });
+
     data.addColumn('datetime', 'Start');
     data.addColumn('datetime', 'End');
 
-    // data.addColumn('number', 'Start');
-    // data.addColumn('number', 'End');
-
     let aux = [];
-    timeline_info.forEach(element => {
-        // aux.push(['n',element.done+'',element.week_start,element.week_end]);
-        aux.push(['n',element.done+'',element.time_open,element.time_close]);
+    proposed_act.forEach(element => {
+        let tooltip = '<p> Done on' +  new Date(element.done * 1000).toDateString() +'<br>' +
+            new Date(element.time_open * 1000).toDateString() + ' to ' + new Date(element.time_close * 1000).toDateString() + '<br>Week ' +
+            element.week_start + ' to ' + element.week_end + '</p>';
+        aux.push(
+            [
+                element.course+'',
+                element.done != null ? (element.done > element.time_close  ? "Late" : "Done") : "Missing",
+                tooltip,
+                new Date(element.time_open * 1000),
+                new Date(element.time_close * 1000)
+            ]
+        );
     });
     // Add data.
     data.addRows(aux);
     var options = {
         title: 'TODO CAHNGE',
+        timeline: { showRowLabels: true },
+        allowHtml: true,
+        height: height,
+        width: width
+    };
 
+    let chart = new google.visualization.Timeline(document.getElementById('act_plot'));
+
+    chart.draw(data, options);
+}
+function draw_C_timeline_on_course() {
+    let data = new google.visualization.DataTable();
+
+    data.addColumn('string', 'Row');
+    data.addColumn('string', 'Bar');
+    data.addColumn({ type: 'string', role: 'tooltip' });
+
+    data.addColumn('datetime', 'Start');
+    data.addColumn('datetime', 'End');
+
+    let aux = [];
+    timeline_info.forEach(element => {
+        let tooltip = '<p>' + element.done + ' of ' + course.num_students + ' have done this activity<br>' +
+            new Date(element.time_open * 1000).toDateString() + ' to ' + new Date(element.time_close * 1000).toDateString() + '<br>Week ' +
+            element.week_start + ' to ' + element.week_end + '</p>';
+        aux.push(
+            [
+                'n',
+                element.done + ' of ' + course.num_students,
+                tooltip,
+                new Date(element.time_open * 1000),
+                new Date(element.time_close * 1000)
+            ]
+        );
+    });
+    // Add data.
+    data.addRows(aux);
+    var options = {
+        title: 'TODO CAHNGE',
+        timeline: { showRowLabels: false },
         allowHtml: true,
         height: height,
         width: width

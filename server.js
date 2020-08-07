@@ -46,11 +46,22 @@ app.get('/student', (req, res) => {
   promises.push(queries.get_activities_in_time(student_id));
   promises.push(queries.get_indicators(student_id));
   promises.push(queries.get_timeline_of_activities_done(student_id));
+  promises.push(queries.get_S_activities_in_timeline(student_id));
   Promise.all(promises).then((values) => {
     if (values[0] == undefined) {
       res.status(404).render('student404', { title: TITLE });
     }
-    res.render('student', { title: TITLE, student: values[0], percentages_data: values[1], grades_data: values[2], students_courses: values[3], weekly_activities: values[4], indicators: values[5], timeline_info: values[6] });
+    res.render('student', {
+      title: TITLE,
+      student: values[0],
+      percentages_data: values[1],
+      grades_data: values[2],
+      students_courses: values[3],
+      weekly_activities: values[4],
+      indicators: values[5],
+      timeline_info: values[6],
+      proposed_act: values[7]
+    });
   });
 });
 
