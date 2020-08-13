@@ -405,13 +405,20 @@ function drawPercentages() {
     let chart = new google.visualization.LineChart(document.getElementById('percentages_plot'));
     chart.draw(data, options);
 }
-function drawLastDays() {
-    let data_p = last_access;
+function draw_P_LastDays() {
+    let data_p = [];
     let data = new google.visualization.DataTable();
     data.addColumn('number', 'ID');
     data.addColumn('string', 'Student');
     data.addColumn('number', 'Days since last access');
-    data.addColumn('number', 'Mean number of activities per week per course enrolled');
+    data.addColumn('number', 'Mean of the Percentage of open activities done');
+    data.addColumn('number', 'Percentage of open activities done');
+
+    last_access.forEach(element => {
+        let name = histogram_data[histogram_data.findIndex((x) => { return x[2] == element.id })][0];
+        data_p.push([element.id,name,element.days,element.avg, element.per]);
+    });
+  
     data.addRows(data_p);
 
     let options = {
@@ -492,7 +499,7 @@ function drawLastDays() {
 
     let view = new google.visualization.DataView(data);
 
-    view.setColumns([1, 2, 3]);
+    view.setColumns([1, 2, 3, 4]);
     table.draw(view, options);
 
     d3.selectAll('#lastaccess_plot').selectAll('table').style('cursor', 'pointer');
