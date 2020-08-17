@@ -604,54 +604,7 @@ function draw_P_LastDays() {
 
     d3.selectAll('#lastaccess_plot').selectAll('table').style('cursor', 'pointer');
 }
-function drawHistogram() {
-    let data = new google.visualization.DataTable();
-
-    // Declare columns
-
-
-    data.addColumn({ id: 'Student', type: 'string' });
-    data.addColumn('number', 'Percentage of participation');
-
-    let aux = [];
-    histogram_data.forEach(element => {
-        aux.push([element[0], element[1]]);
-    });
-    // Add data.
-    data.addRows(aux);
-    var options = {
-        title: 'Distribution of the students by the percentage of participated activities',
-        legend: { position: 'none' },
-        hAxis: {
-            title: 'Percentage of participated activities',
-            viewWindowMode: 'maximized',
-            viewWindow: { max: 100 }
-        },
-        allowHtml: true,
-        height: height,
-        width: width,
-        vAxis: {
-            title: 'Number of students'
-        }
-    };
-
-    let chart = new google.visualization.Histogram(document.getElementById('histogram'));
-
-    // The select handler. Call the chart's getSelection() method
-    function selectHandler() {
-        var selectedItem = chart.getSelection()[0];
-        if (selectedItem) {
-            window.location.href = "/student?id=" + histogram_data[selectedItem.row][2];
-        }
-    }
-
-    google.visualization.events.addListener(chart, 'select', selectHandler);
-    google.visualization.events.addListener(chart, 'onmouseover', changecursorPOINTER);
-    google.visualization.events.addListener(chart, 'onmouseout', changecursorDEFAULT);
-
-    chart.draw(data, options);
-}
-function drawBoxAndWhiskers() {
+function draw_P_Grades() {
     let data_p = [];
     let max_number_of_evals = 0;
     box_data.forEach(course => {
@@ -731,6 +684,53 @@ function drawBoxAndWhiskers() {
         window.location.href = "/course?id=" + this.innerHTML;
     }
 
+}
+function drawHistogram() {
+    let data = new google.visualization.DataTable();
+
+    // Declare columns
+
+
+    data.addColumn({ id: 'Student', type: 'string' });
+    data.addColumn('number', 'Percentage of participation');
+
+    let aux = [];
+    histogram_data.forEach(element => {
+        aux.push([element[0], element[1]]);
+    });
+    // Add data.
+    data.addRows(aux);
+    var options = {
+        title: 'Distribution of the students by the percentage of participated activities',
+        legend: { position: 'none' },
+        hAxis: {
+            title: 'Percentage of participated activities',
+            viewWindowMode: 'maximized',
+            viewWindow: { max: 100 }
+        },
+        allowHtml: true,
+        height: height,
+        width: width,
+        vAxis: {
+            title: 'Number of students'
+        }
+    };
+
+    let chart = new google.visualization.Histogram(document.getElementById('histogram'));
+
+    // The select handler. Call the chart's getSelection() method
+    function selectHandler() {
+        var selectedItem = chart.getSelection()[0];
+        if (selectedItem) {
+            window.location.href = "/student?id=" + histogram_data[selectedItem.row][2];
+        }
+    }
+
+    google.visualization.events.addListener(chart, 'select', selectHandler);
+    google.visualization.events.addListener(chart, 'onmouseover', changecursorPOINTER);
+    google.visualization.events.addListener(chart, 'onmouseout', changecursorDEFAULT);
+
+    chart.draw(data, options);
 }
 function drawPercentages() {
     percentages_data.forEach(element => {
