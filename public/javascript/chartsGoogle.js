@@ -127,15 +127,14 @@ function draw_S_activities_in_timeline() {
 
     let chart = new google.visualization.Timeline(document.getElementById('act_plot'));
 
-   function clickHandler() {
+    function clickHandler() {
         window.location.href = "/course?id=" + this.innerHTML;
     }
-   
+
     chart.draw(data, options);
     d3.selectAll('#act_plot > div > div:nth-child(1) > div > div > svg > g:nth-child(2) > text').style('cursor', 'pointer').on('click', clickHandler);
-    
-}
 
+}
 function drawHistogram() {
     let data = new google.visualization.DataTable();
 
@@ -255,7 +254,7 @@ function drawBoxAndWhiskers() {
     let chart = new google.visualization.ColumnChart(document.getElementById('box_plot'));
 
     chart.draw(data, options);
-   
+
     d3.selectAll('#box_plot').selectAll('g[clip-path] > g:nth-child(2)').raise();
     d3.selectAll('#box_plot > div > div:nth-child(1) > div > svg > g:nth-child(4) > g:nth-child(4) text[text-anchor="middle"]').on('click', clickHandler).style('cursor', 'pointer');
 
@@ -415,9 +414,9 @@ function draw_P_LastDays() {
 
     last_access.forEach(element => {
         let name = histogram_data[histogram_data.findIndex((x) => { return x[2] == element.id })][0];
-        data_p.push([element.id,name,element.days,element.avg, element.per]);
+        data_p.push([element.id, name, element.days, element.avg, element.per]);
     });
-  
+
     data.addRows(data_p);
 
     let options = {
@@ -503,7 +502,7 @@ function draw_P_LastDays() {
 
     d3.selectAll('#lastaccess_plot').selectAll('table').style('cursor', 'pointer');
 }
-function drawGradesTable() {
+function draw_S_GradesTable() {
     let data_p = [];
     students_courses.forEach(element => {
         let course = grades_data[element.course];
@@ -559,7 +558,17 @@ function drawGradesTable() {
     formatter1.addGradientRange(75, 101, 'black', 'yellow', 'green');
     formatter1.format(data, 2);
     let table = new google.visualization.Table(document.getElementById('grades_plot'));
+
+    google.visualization.events.addListener(table, 'select', selectHandler);
+    function selectHandler() {
+        var selectedItem = table.getSelection()[0];
+        if (selectedItem) {
+            var value = data.getValue(selectedItem.row, 0);
+            window.location.href = "/course?id=" + value;
+        }
+    }
     table.draw(data, options);
+    d3.selectAll('#grades_plot').selectAll('table').style('cursor', 'pointer');
 }
 function drawWeekly() {
     let data_p = [];
