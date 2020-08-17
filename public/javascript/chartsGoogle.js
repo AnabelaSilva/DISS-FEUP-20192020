@@ -51,45 +51,6 @@ function draw_C_participation_on_course() {
 
     chart.draw(data, options);
 }
-function draw_S_activities_in_timeline() {
-    let data = new google.visualization.DataTable();
-
-    data.addColumn('string', 'Row');
-    data.addColumn('string', 'Bar');
-    data.addColumn({ type: 'string', role: 'tooltip' });
-
-    data.addColumn('datetime', 'Start');
-    data.addColumn('datetime', 'End');
-
-    let aux = [];
-    proposed_act.forEach(element => {
-        let tooltip = '<p> Done on' + new Date(element.done * 1000).toDateString() + '<br>' +
-            new Date(element.time_open * 1000).toDateString() + ' to ' + new Date(element.time_close * 1000).toDateString() + '<br>Week ' +
-            element.week_start + ' to ' + element.week_end + '</p>';
-        aux.push(
-            [
-                element.course + '',
-                element.done != null ? (element.done > element.time_close ? "Late" : "Done") : "Missing",
-                tooltip,
-                new Date(element.time_open * 1000),
-                new Date(element.time_close * 1000)
-            ]
-        );
-    });
-    // Add data.
-    data.addRows(aux);
-    var options = {
-        title: 'TODO CAHNGE',
-        timeline: { showRowLabels: true },
-        allowHtml: true,
-        height: height,
-        width: width
-    };
-
-    let chart = new google.visualization.Timeline(document.getElementById('act_plot'));
-
-    chart.draw(data, options);
-}
 function draw_C_timeline_on_course() {
     let data = new google.visualization.DataTable();
 
@@ -129,6 +90,52 @@ function draw_C_timeline_on_course() {
 
     chart.draw(data, options);
 }
+function draw_S_activities_in_timeline() {
+    let data = new google.visualization.DataTable();
+
+    data.addColumn('string', 'Row');
+    data.addColumn('string', 'Bar');
+    data.addColumn({ type: 'string', role: 'tooltip' });
+
+    data.addColumn('datetime', 'Start');
+    data.addColumn('datetime', 'End');
+
+    let aux = [];
+    proposed_act.forEach(element => {
+        let tooltip = '<p> Done on' + new Date(element.done * 1000).toDateString() + '<br>' +
+            new Date(element.time_open * 1000).toDateString() + ' to ' + new Date(element.time_close * 1000).toDateString() + '<br>Week ' +
+            element.week_start + ' to ' + element.week_end + '</p>';
+        aux.push(
+            [
+                element.course + '',
+                element.done != null ? (element.done > element.time_close ? "Late" : "Done") : "Missing",
+                tooltip,
+                new Date(element.time_open * 1000),
+                new Date(element.time_close * 1000)
+            ]
+        );
+    });
+    // Add data.
+    data.addRows(aux);
+    var options = {
+        title: 'TODO CAHNGE',
+        timeline: { showRowLabels: true },
+        allowHtml: true,
+        height: height,
+        width: width
+    };
+
+    let chart = new google.visualization.Timeline(document.getElementById('act_plot'));
+
+   function clickHandler() {
+        window.location.href = "/course?id=" + this.innerHTML;
+    }
+   
+    chart.draw(data, options);
+    d3.selectAll('#act_plot > div > div:nth-child(1) > div > div > svg > g:nth-child(2) > text').style('cursor', 'pointer').on('click', clickHandler);
+    
+}
+
 function drawHistogram() {
     let data = new google.visualization.DataTable();
 
