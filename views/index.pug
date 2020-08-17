@@ -7,22 +7,22 @@ block content
         let last_access = !{JSON.stringify(last_access)};
         let participation_by_course = !{JSON.stringify(participation_by_course)};
         let weekly_percentage = !{JSON.stringify(weekly_percentage)};
+        let aggregate_Acts = !{JSON.stringify(aggregate_Acts)};
+        let aggregate_Grades = !{JSON.stringify(aggregate_Grades)};
 
         function drawALL() {
             draw_weekly_percentage();
-            draw_P_Grades();
             drawHistogram();
             draw_P_LastDays();
-            draw_P_CoursesDisplay();
+            draw_P_aggregated();
         }
 
     div(class="content")
         div(class="grid-container")
+            div(id="agg_plot")
             div(id="weekly_percentage")
             div(id="histogram")
-            div(id="box_plot")
             div(id="lastaccess_plot")
-            div(id="courses_plot")
    
     script(type="text/javascript" src="https://www.gstatic.com/charts/loader.js")
     script(type="text/javascript" src="javascript/chartsGoogle.js")

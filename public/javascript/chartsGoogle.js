@@ -6,7 +6,6 @@ google.charts.load('current', { 'packages': ['corechart', 'table', 'timeline'] }
 
 // Set a callback to run when the Google Visualization API is loaded.
 google.charts.setOnLoadCallback(drawALL);
-
 function changecursorPOINTER(e) {
     document.body.style.cursor = 'pointer';
 }
@@ -148,9 +147,6 @@ function draw_C_weekly_percentage() {
 }
 function draw_C_evaluations() {
     let data_p = [];
-    //  TOOLTIP
-    //  element.name + ":\n\tMax: " + element.max + "\n\tQ3: " + element.Q3 + "\n\tMedian: " + element.median + "\n\tQ1: " + element.Q1 + "\n\tMin: " + element.min);
-
     grades_info.data.forEach(element => {
         let eval_row = [];
         eval_row.push(element.name);
@@ -188,7 +184,8 @@ function draw_C_evaluations() {
             lineWidth: 1,
             style: 'boxes'
         },
-        // focusTarget: 'category',
+        focusTarget: 'category',
+        crosshair: { trigger: 'selection' },
         interval: {
             max: {
                 style: 'bars'
@@ -201,11 +198,11 @@ function draw_C_evaluations() {
     let chart = new google.visualization.LineChart(document.getElementById('evaluations_plot'));
 
     chart.draw(data, options);
+   // google.visualization.events.addListener(chart, 'fff', () => {console.log("AAAAAAA");});
 
 }
+
 function draw_C_activities_dist() {
-    //  TOOLTIP
-    //  element.name + ":\n\tMax: " + element.max + "\n\tQ3: " + element.Q3 + "\n\tMedian: " + element.median + "\n\tQ1: " + element.Q1 + "\n\tMin: " + element.min);
 
     let data = new google.visualization.DataTable();
     data.addColumn('string', 'Type');
@@ -219,8 +216,11 @@ function draw_C_activities_dist() {
     data.addColumn({ id: 'thirdQuartile', type: 'number', role: 'interval' });
     data.addColumn({ id: 'max', type: 'number', role: 'interval' });
     data.addRows(box_plot_info.data);
+    
+    let selectLastLineArray = [];
+    selectLastLineArray[8] = { lineWidth: 24, pointSize: 20 };
     let options = {
-        title: "TTTTTTTTTT", //TODO:
+        title: "Distribution of participation in each activity type",
         vAxis: {
             title: 'Percentages'
         },
@@ -228,7 +228,7 @@ function draw_C_activities_dist() {
         width: width,
         legend: { position: 'none' },
         tooltip: { isHtml: true },
-        lineWidth: 1,
+        lineWidth: 0,
         pointSize: 3,
         intervals: {
             barWidth: 1,
@@ -236,6 +236,8 @@ function draw_C_activities_dist() {
             lineWidth: 1,
             style: 'boxes'
         },
+        series:selectLastLineArray,  
+        focusTarget: 'category',
         interval: {
             max: {
                 style: 'bars'
@@ -246,10 +248,8 @@ function draw_C_activities_dist() {
         },
     };
     let chart = new google.visualization.LineChart(document.getElementById('type_plot'));
-
-    chart.draw(data, options);
-
 }
+
 function draw_S_activities_in_timeline() {
     let data = new google.visualization.DataTable();
 
@@ -685,6 +685,87 @@ function draw_P_Grades() {
     }
 
 }
+function draw_P_aggregated() {
+    let data = new google.visualization.DataTable();
+
+    // Declare columns
+    data.addColumn('string', 'Course');
+    data.addColumn('number', 'Grades');
+    data.addColumn({ id: 'min', type: 'number', role: 'interval' });
+    data.addColumn({ id: 'firstQuartile', type: 'number', role: 'interval' });
+    data.addColumn({ id: 'median', type: 'number', role: 'interval' });
+    data.addColumn({ id: 'thirdQuartile', type: 'number', role: 'interval' });
+    data.addColumn({ id: 'max', type: 'number', role: 'interval' });
+
+    data.addColumn({ type: 'string', role: 'tooltip' })
+    data.addColumn('number', 'Participation');
+    data.addColumn({ id: 'min', type: 'number', role: 'interval' });
+    data.addColumn({ id: 'firstQuartile', type: 'number', role: 'interval' });
+    data.addColumn({ id: 'median', type: 'number', role: 'interval' });
+    data.addColumn({ id: 'thirdQuartile', type: 'number', role: 'interval' });
+    data.addColumn({ id: 'max', type: 'number', role: 'interval' });
+
+    data.addColumn({ type: 'string', role: 'tooltip' })
+    let data_p = [];
+    aggregate_Grades.forEach(element => {
+        let aux = [element.course + "", 100, element.min, element.Q1, element.median, element.Q3, element.max,
+        "Grades in course " + element.course + ":\n\tMax: " + element.max + "\n\tQ3: " + element.Q3 + "\n\tMedian: " + element.median + "\n\tQ1: " + element.Q1 + "\n\tMin: " + element.min];
+        let index = aggregate_Acts.findIndex((e) => e.course == element.course);
+        let v = aggregate_Acts[index];
+        if (v == null) {
+            v = {};
+            v.min = null;
+            v.Q1 = null;
+            v.median = null;
+            v.Q3 = null;
+            v.max = null;
+        }
+        aux = aux.concat([100, v.min, v.Q1, v.median, v.Q3, v.max,
+            "Participation in course " + element.course + ":\n\tMax: " + v.max + "\n\tQ3: " + v.Q3 + "\n\tMedian: " + v.median + "\n\tQ1: " + v.Q1 + "\n\tMin: " + v.min
+        ]);
+        data_p.push(aux);
+    });
+    // Add data.
+    data.addRows(data_p);
+    let options = {
+        title: "Distribution of the students' grades and participation in each course",
+        vAxis: {
+            title: 'Percentage'
+        },
+        height: height,
+        width: width,
+        legend: { position: 'top' },
+        tooltip: { isHtml: true },
+        intervals: {
+            barWidth: 1,
+            boxWidth: 1,
+            lineWidth: 1,
+            style: 'boxes'
+        },
+        interval: {
+            max: {
+                style: 'bars'
+            },
+            min: {
+                style: 'bars'
+            }
+        },
+
+        dataOpacity: 0
+
+    };
+    let chart = new google.visualization.ColumnChart(document.getElementById('agg_plot'));
+
+    chart.draw(data, options);
+
+    d3.selectAll('#agg_plot').selectAll('g[clip-path] > g:nth-child(2)').raise();
+    d3.selectAll('#agg_plot > div > div:nth-child(1) > div > svg > g:nth-child(5) > g:nth-child(4) > g text[text-anchor="middle"]').on('click', clickHandler).style('cursor', 'pointer');
+
+    function clickHandler() {
+        window.location.href = "/course?id=" + this.innerHTML;
+    }
+
+}
 function drawHistogram() {
     let data = new google.visualization.DataTable();
 
@@ -746,7 +827,7 @@ function drawPercentages() {
     data.addColumn({ id: 'median', type: 'number', role: 'interval' });
     data.addColumn({ id: 'thirdQuartile', type: 'number', role: 'interval' });
     data.addColumn({ id: 'max', type: 'number', role: 'interval' });
-    data.addColumn({ type: 'string', role: 'tooltip' })
+    data.addColumn({ type: 'string', role: 'tooltip' });
     // Add data.
     data.addRows(percentages_data);
     let options = {

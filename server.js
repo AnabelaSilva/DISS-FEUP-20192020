@@ -21,6 +21,8 @@ app.get('/', (req, res) => {
   promises.push(queries.get_lastAccess());
   promises.push(queries.get_activities_from_courses());
   promises.push(queries.get_activities_by_week_by_course());
+  promises.push(queries.get_P_aggregate_activities());
+  promises.push(queries.get_P_aggregate_grades());
   Promise.all(promises).then((values) => {
     res.render('index', {
       title: TITLE,
@@ -28,7 +30,9 @@ app.get('/', (req, res) => {
       box_data: values[1],
       last_access: values[2],
       participation_by_course: values[3],
-      weekly_percentage: values[4]
+      weekly_percentage: values[4],
+      aggregate_Acts: values[5],
+      aggregate_Grades: values[6]
     });
   });
 

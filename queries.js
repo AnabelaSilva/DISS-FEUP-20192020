@@ -496,7 +496,6 @@ function get_C_evaluations_from_course(course_id) {
   });
   return promise;
 }
-
 function get_S_activities_in_timeline(student_id) {
   let sql = queries_sql.get_S_activities_in_timeline;
   let params = [student_id];
@@ -514,7 +513,75 @@ function get_S_activities_in_timeline(student_id) {
   });
   return promise;
 }
-
+function get_P_aggregate_grades() {
+  let sql = queries_sql.get_P_aggregate_grades;
+  let params = [];
+  let promise = new Promise((resolve, reject) => {
+    db.all(sql, params,
+      function (err, rows) {
+        if (err) {
+          console.error(err);
+          console.trace();
+          return err;
+        }
+        let aux = [];
+        let courses_ids = [];
+        rows.forEach(element => {
+          let index = courses_ids.indexOf(element.course);
+          if (index == -1) {
+            index = courses_ids.push(element.course) - 1;
+            aux[index] = { course: element.course, data: [] };
+          }
+          aux[index].data.push(element.value);
+        });
+        aux.forEach(element => {
+          element.data.sort(function (a, b) { return a - b });
+          element.min = d3.quantile(element.data, 0);
+          element.Q1 = d3.quantile(element.data, 0.25);
+          element.median = d3.quantile(element.data, 0.5);
+          element.Q3 = d3.quantile(element.data, 0.75);
+          element.max = d3.quantile(element.data, 1);
+        });
+        resolve(aux);
+      });
+  });
+  return promise;
+}
+function get_P_aggregate_activities() {
+  let sql = queries_sql.get_P_aggregate_activities;
+  let params = [];
+  let promise = new Promise((resolve, reject) => {
+    db.all(sql, params,
+      function (err, rows) {
+        if (err) {
+          console.error(err);
+          console.trace();
+          return err;
+        }
+        let aux = [];
+        let courses_ids = [];
+        rows.forEach(element => {
+          let index = courses_ids.indexOf(element.course);
+          if (index == -1) {
+            index = courses_ids.push(element.course) - 1;
+            aux[index] = { course: element.course, data: [] };
+          }
+          aux[index].data.push(100 * element.done / element.act);
+        });
+        aux.forEach(element => {
+          element.data.sort(function (a, b) { return a - b });
+          element.min = d3.quantile(element.data, 0);
+          element.Q1 = d3.quantile(element.data, 0.25);
+          element.median = d3.quantile(element.data, 0.5);
+          element.Q3 = d3.quantile(element.data, 0.75);
+          element.max = d3.quantile(element.data, 1);
+        });
+        resolve(aux);
+      }
+    );
+  });
+  return promise;
+}
 function get_C_boxplot_of_activities(course_id) {
   let sql = queries_sql.get_C_boxplot_of_activities;
   let params = [course_id];
@@ -553,18 +620,22 @@ function get_C_boxplot_of_activities(course_id) {
         res[0].push(d3.quantile(forums_data, 0.5));
         res[0].push(d3.quantile(forums_data, 0.75));
         res[0].push(d3.quantile(forums_data, 1));
+        res[0].push(null);
         quizzes_data.sort(function (a, b) { return a - b });
         res[1].push(d3.quantile(quizzes_data, 0));
         res[1].push(d3.quantile(quizzes_data, 0.25));
         res[1].push(d3.quantile(quizzes_data, 0.5));
         res[1].push(d3.quantile(quizzes_data, 0.75));
         res[1].push(d3.quantile(quizzes_data, 1));
+        res[1].push(null);
         assigns_data.sort(function (a, b) { return a - b });
         res[2].push(d3.quantile(assigns_data, 0));
         res[2].push(d3.quantile(assigns_data, 0.25));
         res[2].push(d3.quantile(assigns_data, 0.5));
         res[2].push(d3.quantile(assigns_data, 0.75));
         res[2].push(d3.quantile(assigns_data, 1));
+        res[2].push(null);
+       
 
         res = { students_ids: students_ids, data: res };
         resolve(res);
@@ -574,6 +645,8 @@ function get_C_boxplot_of_activities(course_id) {
   return promise;
 }
 module.exports = {
+  get_P_aggregate_activities: get_P_aggregate_activities,
+  get_P_aggregate_grades: get_P_aggregate_grades,
   get_C_boxplot_of_activities: get_C_boxplot_of_activities,
   get_S_activities_in_timeline: get_S_activities_in_timeline,
   get_course_info: get_course_info,
@@ -594,6 +667,8 @@ module.exports = {
 };
 
 let queries_sql = {
+  get_P_aggregate_activities: "SELECT course,        STUDENT_IN_COURSE.student,        count(id) AS act,        count(done) AS done   FROM (            SELECT id,                   course              FROM QUIZ            UNION ALL            SELECT id,                   course              FROM FORUM            UNION ALL            SELECT id,                   course              FROM ASSIGN        )        AS tab1        JOIN        STUDENT_IN_COURSE USING (            course        )        LEFT JOIN        (            SELECT student,                   forum AS act,                   created AS done              FROM POST            UNION ALL            SELECT student,                   assign AS act,                   created AS done              FROM SUBMISSION            UNION ALL            SELECT student,                   quiz AS act,                   finish AS done              FROM ATTEMPT        )        AS tab2 ON (act = id AND                     STUDENT_IN_COURSE.student = tab2.student)   GROUP BY course,           STUDENT_IN_COURSE.student;",
+  get_P_aggregate_grades: "SELECT course,        value   FROM STUDENT_IN_COURSE        LEFT JOIN        EVALUATION USING (            course        )        LEFT JOIN        GRADE ON (GRADE.evaluation = EVALUATION.id AND                   STUDENT_IN_COURSE.student = GRADE.student);",
   get_C_boxplot_of_activities: "SELECT STUDENT_IN_COURSE.student,        course,        count(DISTINCT FORUM.id) AS forum,        count(DISTINCT QUIZ.id) AS quiz,        count(DISTINCT ASSIGN.id) AS assign,        count(DISTINCT POST.forum) AS post,        count(DISTINCT ATTEMPT.quiz) AS attempt,        count(DISTINCT SUBMISSION.assign) AS submission   FROM STUDENT_IN_COURSE        LEFT JOIN        FORUM USING (            course        )        LEFT JOIN        QUIZ USING (            course        )        LEFT JOIN        ASSIGN USING (            course        )        LEFT JOIN        POST ON (STUDENT_IN_COURSE.student = POST.student AND                  FORUM.id = POST.forum)         LEFT JOIN        ATTEMPT ON (STUDENT_IN_COURSE.student = ATTEMPT.student AND                     QUIZ.id = ATTEMPT.quiz)         LEFT JOIN        SUBMISSION ON (STUDENT_IN_COURSE.student = SUBMISSION.student AND                        ASSIGN.id = SUBMISSION.assign)                        WHERE course = ?  GROUP BY course,           STUDENT_IN_COURSE.student;",
   get_S_activities_in_timeline: "SELECT id, course, time_open, time_close,((time_open - 1602284400) / 604800) AS week_start, (( time_close- 1602284400) / 604800) AS week_end, done FROM(  SELECT id, course, time_open, time_close FROM QUIZ UNION ALL SELECT id, course, time_open, time_close FROM FORUM UNION ALL SELECT id, course, time_open, time_close FROM ASSIGN )AS tab1  JOIN STUDENT_IN_COURSE USING (course) LEFT JOIN( SELECT student, forum AS act, created AS done FROM POST UNION ALL SELECT student, assign AS act, created AS done FROM SUBMISSION UNION ALL SELECT student, quiz AS act, finish AS done FROM ATTEMPT )AS tab2 ON (act = id AND STUDENT_IN_COURSE.student = tab2.student) WHERE  STUDENT_IN_COURSE.student = ? ;",
   get_course_info: "SELECT *, count() AS num_students FROM COURSE JOIN STUDENT_IN_COURSE ON (id = course)WHERE id = ?;",
