@@ -240,7 +240,6 @@ function participate(student, topic, day, students_in_courses, activities) {
             activities.submissions.push(subm);
             break;
         default:
-            //console.log("Other");
             break;
     }
     for (let index = 0; index < students_in_courses.length; index++) {

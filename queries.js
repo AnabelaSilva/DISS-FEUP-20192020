@@ -148,7 +148,6 @@ function get_lastAccess() {
             aux[index].done_per = 100 * element.done_num / element.act_num;
           }
         });
-        console.log(aux);
         let res = [];
         aux.forEach(element => {
           let days = null;
@@ -536,7 +535,6 @@ function get_C_boxplot_of_activities(course_id) {
           ['Attempted Quizzes'],
           ['Submitted Assignments']
         ];
-        console.log(rows);
         rows.forEach(element => {
           let index = students_ids.indexOf(element.student);
           if (index == -1) {

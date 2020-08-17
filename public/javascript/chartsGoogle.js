@@ -248,14 +248,7 @@ function drawBoxAndWhiskers() {
     let chart = new google.visualization.ColumnChart(document.getElementById('box_plot'));
 
     chart.draw(data, options);
-    // The select handler. Call the chart's getSelection() method
-    function selectHandler() {
-        var selectedItem = chart.getSelection()[0];
-        if (selectedItem) {
-            console.log(selectedItem);
-            //window.location.href = "/student?id=" + participation_info[selectedItem.row][0];
-        }
-    }
+   
     d3.selectAll('#box_plot').selectAll('g[clip-path] > g:nth-child(2)').raise();
     d3.selectAll('#box_plot > div > div:nth-child(1) > div > svg > g:nth-child(4) > g:nth-child(4) text[text-anchor="middle"]').on('click', clickHandler).style('cursor', 'pointer');
 
@@ -343,7 +336,6 @@ function draw_P_CoursesDisplay() {
     function selectHandler() {
         var selectedItem = chart.getSelection()[0];
         if (selectedItem) {
-            console.log(selectedItem);
             window.location.href = "/course?id=" + data.getColumnLabel(selectedItem.column);
         }
     }
@@ -710,7 +702,6 @@ function draw_C_weekly_percentage() {
     data.addColumn('number', 'Average Course');
 
     let columns = [];
-    console.log(week_info);
     week_info[0].courses.forEach(element => {
         if (element != null) {
             columns.push(element.course);
@@ -824,7 +815,6 @@ function draw_C_activities_dist() {
     data.addColumn({ id: 'median', type: 'number', role: 'interval' });
     data.addColumn({ id: 'thirdQuartile', type: 'number', role: 'interval' });
     data.addColumn({ id: 'max', type: 'number', role: 'interval' });
-    console.log(box_plot_info.data);
     data.addRows(box_plot_info.data);
     let options = {
         title: "TTTTTTTTTT", //TODO:
