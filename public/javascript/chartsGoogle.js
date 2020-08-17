@@ -570,7 +570,7 @@ function draw_S_GradesTable() {
     table.draw(data, options);
     d3.selectAll('#grades_plot').selectAll('table').style('cursor', 'pointer');
 }
-function drawWeekly() {
+function draw_S_Weekly() {
     let data_p = [];
     weekly_activities.forEach(element => {
         data_p.push([element.week, element.student, element.average]);
@@ -600,7 +600,7 @@ function drawWeekly() {
     let chart = new google.visualization.LineChart(document.getElementById('week_plot'));
     chart.draw(data, options);
 }
-function drawIndicators() {
+function draw_S_Indicators() {
     var data = new google.visualization.DataTable();
     data.addColumn('string', 'Indicator');
     data.addColumn('number', student.name);

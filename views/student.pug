@@ -17,19 +17,17 @@ block content
             drawTimelineDisplay();
             drawPercentages();
             draw_S_GradesTable();
-            drawWeekly();
-            drawIndicators();
+            //draw_S_Weekly();
+            //draw_S_Indicators();
         }
     div(class="content")
         p Student: #{student.name}
         div(class="grid-container")
             div(id="act_plot")
             div(id="timeline_plot")
-            div(id="week_plot" style={'grid-row-start': 1, 'grid-column-start': 1})
             div(id="percentages_plot" style={'grid-row-start': 1, 'grid-column-start': 2})
             div(id="grades_plot" style={'grid-row-start': 2, 'grid-column-start': 1})
-            div(id="indicators_plot" style={'grid-row-start': 2, 'grid-column-start': 2})
- 
+
     script(type="text/javascript" src="https://www.gstatic.com/charts/loader.js")
     script(type="text/javascript" src="javascript/chartsGoogle.js")
         
