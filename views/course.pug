@@ -10,20 +10,21 @@ block content
         let box_plot_info = !{JSON.stringify(box_plot_info)};
 
         function drawALL() {
+            
+            draw_C_activities_dist();
             draw_C_weekly_percentage();
             draw_C_participation_on_course();
             draw_C_timeline_on_course();
             draw_C_evaluations();
-            draw_C_activities_dist();
         }
     
     div(class="content")
         p Course: #{course.name}
         div(class="grid-container")
-            div(id="type_plot")
+            div(id="timeline_on_course_plot")
             div(id="weekly_plot")
             div(id="participation_on_course_plot")
-            div(id="timeline_on_course_plot")
+            div(id="type_plot")
             div(id="evaluations_plot")
  
     script(type="text/javascript" src="https://www.gstatic.com/charts/loader.js")

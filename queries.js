@@ -620,21 +620,18 @@ function get_C_boxplot_of_activities(course_id) {
         res[0].push(d3.quantile(forums_data, 0.5));
         res[0].push(d3.quantile(forums_data, 0.75));
         res[0].push(d3.quantile(forums_data, 1));
-        res[0].push(null);
         quizzes_data.sort(function (a, b) { return a - b });
         res[1].push(d3.quantile(quizzes_data, 0));
         res[1].push(d3.quantile(quizzes_data, 0.25));
         res[1].push(d3.quantile(quizzes_data, 0.5));
         res[1].push(d3.quantile(quizzes_data, 0.75));
         res[1].push(d3.quantile(quizzes_data, 1));
-        res[1].push(null);
         assigns_data.sort(function (a, b) { return a - b });
         res[2].push(d3.quantile(assigns_data, 0));
         res[2].push(d3.quantile(assigns_data, 0.25));
         res[2].push(d3.quantile(assigns_data, 0.5));
         res[2].push(d3.quantile(assigns_data, 0.75));
         res[2].push(d3.quantile(assigns_data, 1));
-        res[2].push(null);
        
 
         res = { students_ids: students_ids, data: res };

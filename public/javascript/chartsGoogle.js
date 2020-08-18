@@ -12,6 +12,7 @@ function changecursorPOINTER(e) {
 function changecursorDEFAULT(e) {
     document.body.style.cursor = 'default';
 }
+
 function draw_C_participation_on_course() {
     let data = new google.visualization.DataTable();
 
@@ -43,7 +44,7 @@ function draw_C_participation_on_course() {
     let chart = new google.visualization.Histogram(document.getElementById('participation_on_course_plot'));
 
     // The select handler. Call the chart's getSelection() method
-    function selectHandler() {
+    function selectHandler(e) {
         var selectedItem = chart.getSelection()[0];
         if (selectedItem) {
             window.location.href = "/student?id=" + participation_info[selectedItem.row][0];
@@ -201,7 +202,6 @@ function draw_C_evaluations() {
    // google.visualization.events.addListener(chart, 'fff', () => {console.log("AAAAAAA");});
 
 }
-
 function draw_C_activities_dist() {
 
     let data = new google.visualization.DataTable();
@@ -216,9 +216,6 @@ function draw_C_activities_dist() {
     data.addColumn({ id: 'thirdQuartile', type: 'number', role: 'interval' });
     data.addColumn({ id: 'max', type: 'number', role: 'interval' });
     data.addRows(box_plot_info.data);
-    
-    let selectLastLineArray = [];
-    selectLastLineArray[8] = { lineWidth: 24, pointSize: 20 };
     let options = {
         title: "Distribution of participation in each activity type",
         vAxis: {
@@ -236,7 +233,6 @@ function draw_C_activities_dist() {
             lineWidth: 1,
             style: 'boxes'
         },
-        series:selectLastLineArray,  
         focusTarget: 'category',
         interval: {
             max: {
@@ -248,8 +244,9 @@ function draw_C_activities_dist() {
         },
     };
     let chart = new google.visualization.LineChart(document.getElementById('type_plot'));
+    chart.draw(data, options);
+    C={ chart: chart, op:options, data:data};
 }
-
 function draw_S_activities_in_timeline() {
     let data = new google.visualization.DataTable();
 
@@ -391,29 +388,6 @@ function draw_S_Weekly() {
         }
     };
     let chart = new google.visualization.LineChart(document.getElementById('week_plot'));
-    chart.draw(data, options);
-}
-function draw_S_Indicators() {
-    var data = new google.visualization.DataTable();
-    data.addColumn('string', 'Indicator');
-    data.addColumn('number', student.name);
-    data.addColumn('number', 'Average Student');
-
-    data.addRows(indicators);
-
-    var options = {
-        title: 'Compare ' + student.name + ' with the average of students on the indicators',
-        legend: {
-            position: 'top'
-        },
-        height: height,
-        width: width,
-        focusTarget: 'category'
-    };
-
-    var chart = new google.visualization.ColumnChart(
-        document.getElementById('indicators_plot'));
-
     chart.draw(data, options);
 }
 function draw_P_CoursesDisplay() {
@@ -813,7 +787,7 @@ function drawHistogram() {
 
     chart.draw(data, options);
 }
-function drawPercentages() {
+function draw_S_Percentages() {
     percentages_data.forEach(element => {
         element[7] = student.name + " -> " + element[1].toFixed(2) + "%\n They are on the " + element[7].toFixed(2) + " percentile";
     });
@@ -831,7 +805,7 @@ function drawPercentages() {
     // Add data.
     data.addRows(percentages_data);
     let options = {
-        title: "Compare " + student.name + " with the average student on the percentage of the indicators",
+        title: 'Situate ' + student.name + ' in the distribution of students on the following indicators',
         vAxis: {
             title: 'Percentage'
         },
