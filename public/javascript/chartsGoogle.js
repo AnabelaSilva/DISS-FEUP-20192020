@@ -259,9 +259,7 @@ function draw_S_activities_in_timeline() {
 
     let aux = [];
     proposed_act.forEach(element => {
-        let tooltip = '<p> Done on' + new Date(element.done * 1000).toDateString() + '<br>' +
-            new Date(element.time_open * 1000).toDateString() + ' to ' + new Date(element.time_close * 1000).toDateString() + '<br>Week ' +
-            element.week_start + ' to ' + element.week_end + '</p>';
+        let tooltip = (element.done != null ? ('<p> Done on ' + new Date(element.done * 1000).toDateString()) : "<p> Not Done")+ '<br>' + new Date(element.time_open * 1000).toDateString() + ' to ' + new Date(element.time_close * 1000).toDateString() + '<br>Week ' + element.week_start + ' to ' + element.week_end + '</p>';
         aux.push(
             [
                 element.course + '',
@@ -388,6 +386,57 @@ function draw_S_Weekly() {
         }
     };
     let chart = new google.visualization.LineChart(document.getElementById('week_plot'));
+    chart.draw(data, options);
+}
+function draw_S_Percentages() {
+    percentages_data.forEach(element => {
+        element[7] = student.name + " -> " + element[1].toFixed(2) + "%\n They are on the " + element[7].toFixed(2) + " percentile";
+    });
+    let data = new google.visualization.DataTable();
+
+    // Declare columns
+    data.addColumn('string', 'Percentage');
+    data.addColumn('number', 'Value');
+    data.addColumn({ id: 'min', type: 'number', role: 'interval' });
+    data.addColumn({ id: 'firstQuartile', type: 'number', role: 'interval' });
+    data.addColumn({ id: 'median', type: 'number', role: 'interval' });
+    data.addColumn({ id: 'thirdQuartile', type: 'number', role: 'interval' });
+    data.addColumn({ id: 'max', type: 'number', role: 'interval' });
+    data.addColumn({ type: 'string', role: 'tooltip' });
+    // Add data.
+    data.addRows(percentages_data);
+    let options = {
+        title: 'Situate ' + student.name + ' in the distribution of students on the following indicators',
+        vAxis: {
+            title: 'Percentage'
+        },
+        height: height,
+        width: width,
+        tooltip: { isHtml: true },
+        legend: { position: 'none' },
+        lineWidth: 0,
+        pointSize: 10,
+        colors: ['blue'],
+        pointShape: 'diamond',
+        intervals: {
+            color: 'red',
+            barWidth: 1,
+            boxWidth: 1,
+            lineWidth: 1,
+            style: 'boxes'
+        },
+        interval: {
+            max: {
+                style: 'bars',
+                fillOpacity: 1,
+            },
+            min: {
+                style: 'bars',
+                fillOpacity: 1,
+            }
+        }
+    };
+    let chart = new google.visualization.LineChart(document.getElementById('percentages_plot'));
     chart.draw(data, options);
 }
 function draw_P_CoursesDisplay() {
@@ -785,57 +834,6 @@ function drawHistogram() {
     google.visualization.events.addListener(chart, 'onmouseover', changecursorPOINTER);
     google.visualization.events.addListener(chart, 'onmouseout', changecursorDEFAULT);
 
-    chart.draw(data, options);
-}
-function draw_S_Percentages() {
-    percentages_data.forEach(element => {
-        element[7] = student.name + " -> " + element[1].toFixed(2) + "%\n They are on the " + element[7].toFixed(2) + " percentile";
-    });
-    let data = new google.visualization.DataTable();
-
-    // Declare columns
-    data.addColumn('string', 'Percentage');
-    data.addColumn('number', 'Value');
-    data.addColumn({ id: 'min', type: 'number', role: 'interval' });
-    data.addColumn({ id: 'firstQuartile', type: 'number', role: 'interval' });
-    data.addColumn({ id: 'median', type: 'number', role: 'interval' });
-    data.addColumn({ id: 'thirdQuartile', type: 'number', role: 'interval' });
-    data.addColumn({ id: 'max', type: 'number', role: 'interval' });
-    data.addColumn({ type: 'string', role: 'tooltip' });
-    // Add data.
-    data.addRows(percentages_data);
-    let options = {
-        title: 'Situate ' + student.name + ' in the distribution of students on the following indicators',
-        vAxis: {
-            title: 'Percentage'
-        },
-        height: height,
-        width: width,
-        tooltip: { isHtml: true },
-        legend: { position: 'none' },
-        lineWidth: 0,
-        pointSize: 10,
-        colors: ['blue'],
-        pointShape: 'diamond',
-        intervals: {
-            color: 'red',
-            barWidth: 1,
-            boxWidth: 1,
-            lineWidth: 1,
-            style: 'boxes'
-        },
-        interval: {
-            max: {
-                style: 'bars',
-                fillOpacity: 1,
-            },
-            min: {
-                style: 'bars',
-                fillOpacity: 1,
-            }
-        }
-    };
-    let chart = new google.visualization.LineChart(document.getElementById('percentages_plot'));
     chart.draw(data, options);
 }
 function drawTimelineDisplay() {
