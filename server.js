@@ -7,7 +7,6 @@ let db = require("./database.js");
 const queries = require('./queries.js');
 const dummy = require('./dummyData.js');
 
-//TODO: Dynamically
 const TITLE = 'Mestrado em Tecnologias e Sistemas Informáticos Web';
 
 app.set('view engine', 'pug');

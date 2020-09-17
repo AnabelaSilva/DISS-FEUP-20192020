@@ -85,7 +85,7 @@ function draw_C_timeline_on_course() {
     // Add data.
     data.addRows(aux);
     var options = {
-        title: 'TODO CAHNGE',
+        title: '',
         timeline: { showRowLabels: false },
         allowHtml: true,
         height: height,
@@ -273,7 +273,7 @@ function draw_S_activities_in_timeline() {
     // Add data.
     data.addRows(aux);
     var options = {
-        title: 'TODO CAHNGE',
+        title: '',
         timeline: { showRowLabels: true },
         allowHtml: true,
         height: height,
